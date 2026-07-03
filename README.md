@@ -1,4 +1,4 @@
-# postzen-node
+# @postzen/node
 
 Node.js client for the [PostZen Public API](https://api.postzen.dev) — manage profiles, connected social accounts, OAuth connection flows, media uploads, and post creation from server-side integrations.
 
@@ -7,7 +7,7 @@ This SDK is auto-generated from the PostZen OpenAPI specification using [OpenAPI
 ## Installation
 
 ```bash
-npm install postzen-node
+npm install @postzen/node
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ npm install postzen-node
 Authenticate with your PostZen API key as a bearer token:
 
 ```ts
-import { ProfilesApi, PostsApi } from 'postzen-node';
+import { ProfilesApi, PostsApi } from '@postzen/node';
 
 const profiles = new ProfilesApi();
 profiles.accessToken = process.env.POSTZEN_API_KEY!;

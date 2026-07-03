@@ -1,17 +1,25 @@
 {
-    "name": "postzen-node",
+    "name": "@postzen/node",
     "version": "1.0.0",
-    "description": "NodeJS client for postzen-node",
+    "description": "Node.js SDK for the PostZen Public API",
     "repository": {
         "type": "git",
-        "url": "https://github.com/postzen-dev/postzen-node.git"
+        "url": "git+https://github.com/postzen-dev/postzen-node.git"
     },
     "main": "dist/api.js",
     "types": "dist/api.d.ts",
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "clean": "rm -Rf node_modules/ *.js",
         "build": "tsc",
-        "test": "npm run build && node dist/client.js"
+        "prepack": "npm run build",
+        "test": "npm run build && node -e \"require('./dist/api.js')\""
     },
     "author": "OpenAPI-Generator Contributors",
     "license": "Unlicense",
