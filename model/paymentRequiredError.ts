@@ -65,6 +65,7 @@ export namespace PaymentRequiredError {
         PaymentRequired = <any> 'paymentRequired'
     }
     export enum ReasonEnum {
-        FreeTierExceeded = <any> 'freeTierExceeded'
+        FreeTierExceeded = <any> 'freeTierExceeded',
+        XRequiresPaymentMethod = <any> 'xRequiresPaymentMethod'
     }
 }
