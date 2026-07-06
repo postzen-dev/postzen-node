@@ -1,36 +1,67 @@
 {
-    "name": "@postzen/node",
-    "version": "1.0.0",
-    "description": "Node.js SDK for the PostZen Public API",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/postzen-dev/postzen-node.git"
-    },
-    "main": "dist/api.js",
-    "types": "dist/api.d.ts",
-    "files": [
-        "dist",
-        "README.md"
-    ],
-    "publishConfig": {
-        "access": "public"
-    },
-    "scripts": {
-        "clean": "rm -Rf node_modules/ *.js",
-        "build": "tsc",
-        "prepack": "npm run build",
-        "test": "npm run build && node -e \"require('./dist/api.js')\""
-    },
-    "author": "OpenAPI-Generator Contributors",
-    "license": "Unlicense",
-    "dependencies": {
-        "bluebird": "^3.7.2",
-        "request": "^2.88.2"
-    },
-    "devDependencies": {
-        "@types/bluebird": "^3.5.33",
-        "@types/node": "^12",
-        "@types/request": "^2.48.8",
-        "typescript": "^4.0 || ^5.0"
+  "name": "@postzen/node",
+  "version": "2.0.0",
+  "description": "Official Node.js SDK for the PostZen Public API",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "sync-spec": "tsx scripts/sync-spec.ts",
+    "generate": "openapi-ts && npm run generate:client && npm run generate:readme && npm run generate:tests",
+    "generate:client": "tsx scripts/generate-client.ts",
+    "generate:readme": "tsx scripts/generate-readme-reference.ts",
+    "generate:tests": "tsx scripts/generate-endpoint-tests.ts",
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/postzen-dev/postzen-node.git"
+  },
+  "homepage": "https://github.com/postzen-dev/postzen-node#readme",
+  "bugs": {
+    "url": "https://github.com/postzen-dev/postzen-node/issues"
+  },
+  "keywords": [
+    "postzen",
+    "social-media",
+    "publishing",
+    "scheduling",
+    "api",
+    "sdk",
+    "typescript",
+    "node"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.73.0",
+    "@types/node": "^20.11.0",
+    "tsup": "^8.0.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  }
 }
