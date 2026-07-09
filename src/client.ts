@@ -19,6 +19,12 @@ import {
   updateProfile,
 } from './generated/sdk.gen';
 import { PostZenApiError, parseApiError } from './errors';
+import {
+  uploadMedia,
+  type MediaUploadSource,
+  type MediaUploadOptions,
+  type UploadedMedia,
+} from './upload';
 
 export interface ClientOptions {
   /**
@@ -205,6 +211,18 @@ export class PostZen {
    */
   media = {
     createMediaPresign: ((options?: Parameters<typeof createMediaPresign>[0]) => createMediaPresign(this._withRequestOptions(options) as Parameters<typeof createMediaPresign>[0])) as typeof createMediaPresign,
+    /**
+     * Upload media in one step: presign, PUT the raw bytes to the returned
+     * `uploadUrl`, and resolve with the public URL and metadata.
+     */
+    upload: (source: MediaUploadSource, options?: MediaUploadOptions): Promise<UploadedMedia> =>
+      uploadMedia(source, options, {
+        presign: async (body, signal) => {
+          const { data } = await this.media.createMediaPresign(signal ? { body, signal } : { body });
+          return data!;
+        },
+        putSignal: (callerSignal) => mergeSignals([callerSignal ?? undefined, createTimeoutSignal(this._timeout)]),
+      }),
   };
 
   /**

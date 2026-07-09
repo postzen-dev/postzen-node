@@ -176,6 +176,40 @@ await postzen.posts.createPost({
 });
 ```
 
+### Upload media
+
+`media.upload` is a one-step helper: it presigns, uploads the raw bytes to the
+returned storage URL, and resolves with the public URL and metadata. Pass a file
+path (the content type is inferred from the extension) or raw bytes with an
+explicit `filename`.
+
+```typescript
+// From a file path — content type inferred from the extension.
+const media = await postzen.media.upload('./photo.jpg');
+
+// From a Buffer or Uint8Array — filename is required.
+const fromBytes = await postzen.media.upload(buffer, { filename: 'photo.jpg' });
+
+// media => { publicUrl, key, type, size, filename }
+console.log(media.publicUrl);
+```
+
+Reference the returned `publicUrl` in `posts.createPost`:
+
+```typescript
+const media = await postzen.media.upload('./photo.jpg');
+
+await postzen.posts.createPost({
+  body: {
+    title: 'Post with media',
+    content: 'Uploaded through the PostZen SDK.',
+    publishNow: true,
+    mediaItems: [{ url: media.publicUrl, title: media.filename }],
+    platforms: [{ platform: 'instagram', accountId: 'account_id' }],
+  },
+});
+```
+
 ### List Accounts
 
 ```typescript

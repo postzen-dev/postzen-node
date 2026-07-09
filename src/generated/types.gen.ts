@@ -32,9 +32,9 @@ export type MessageResponse = {
     message: string;
 };
 
-export type PublicPlatformInput = 'twitter' | 'x' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest';
+export type PublicPlatformInput = 'twitter' | 'x' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest' | 'bluesky';
 
-export type PublicPlatformOutput = 'twitter' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest';
+export type PublicPlatformOutput = 'twitter' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest' | 'bluesky';
 
 export type Profile = {
     /**
@@ -249,7 +249,7 @@ export type CreatePostTarget = {
 /**
  * Platform-specific publishing options. Unknown keys are ignored.
  */
-export type PostPlatformSettings = InstagramSettings | FacebookSettings | ThreadsSettings | TikTokSettings | LinkedInSettings | XSettings | YouTubeSettings | PinterestSettings;
+export type PostPlatformSettings = InstagramSettings | FacebookSettings | ThreadsSettings | TikTokSettings | LinkedInSettings | XSettings | YouTubeSettings | PinterestSettings | BlueskySettings;
 
 export type InstagramSettings = {
     postType?: 'feed' | 'story' | 'reel' | 'carousel';
@@ -317,6 +317,21 @@ export type PinterestSettings = {
      */
     link?: string;
     altText?: string;
+};
+
+export type BlueskySettings = {
+    /**
+     * Alt text for each image, matched to the media by order. Each entry is limited to 2000 characters.
+     */
+    altTexts?: Array<string>;
+    /**
+     * Up to 3 BCP-47 language codes (e.g. `en`, `pt-BR`) declaring the languages of the post text.
+     */
+    languages?: Array<string>;
+    /**
+     * When true, PostZen skips generating an external link preview card for the first URL in the post.
+     */
+    disableLinkCard?: boolean;
 };
 
 export type ApiPost = {

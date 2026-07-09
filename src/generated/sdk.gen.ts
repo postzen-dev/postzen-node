@@ -148,6 +148,8 @@ export const disconnectAccount = <ThrowOnError extends boolean = false>(options:
 /**
  * Create an OAuth connect URL
  * Initiates an OAuth connection flow and returns an authorization URL to redirect the user to. The OAuth state expires after 10 minutes. This endpoint requires a read-write API key.
+ *
+ * For `bluesky`, the returned `authUrl` is a PostZen-hosted page where the user enters their Bluesky handle and app password (no developer app or OAuth redirect is required); the connection completes when they submit that form.
  */
 export const createConnectUrl = <ThrowOnError extends boolean = false>(options: Options<CreateConnectUrlData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).get<CreateConnectUrlResponses, CreateConnectUrlErrors, ThrowOnError>({

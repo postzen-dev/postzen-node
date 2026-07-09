@@ -109,6 +109,24 @@ function namespaceComment(namespace: string): string {
   return comments[namespace] ?? `${namespace} API`;
 }
 
+// Hand-written media.upload helper grafted onto the generated media namespace.
+// The heavy lifting lives in src/upload.ts; this arrow only wires the generated
+// client's presign path and timeout mechanism into it.
+const MEDIA_UPLOAD_METHOD_LINES = [
+  '    /**',
+  '     * Upload media in one step: presign, PUT the raw bytes to the returned',
+  '     * `uploadUrl`, and resolve with the public URL and metadata.',
+  '     */',
+  '    upload: (source: MediaUploadSource, options?: MediaUploadOptions): Promise<UploadedMedia> =>',
+  '      uploadMedia(source, options, {',
+  '        presign: async (body, signal) => {',
+  '          const { data } = await this.media.createMediaPresign(signal ? { body, signal } : { body });',
+  '          return data!;',
+  '        },',
+  '        putSignal: (callerSignal) => mergeSignals([callerSignal ?? undefined, createTimeoutSignal(this._timeout)]),',
+  '      }),',
+];
+
 function generateNamespace(namespace: string, operations: OperationInfo[]): string {
   const lines = [
     '  /**',
@@ -121,6 +139,10 @@ function generateNamespace(namespace: string, operations: OperationInfo[]): stri
     lines.push(
       `    ${operation.methodName}: ((options?: Parameters<typeof ${operation.functionName}>[0]) => ${operation.functionName}(this._withRequestOptions(options) as Parameters<typeof ${operation.functionName}>[0])) as typeof ${operation.functionName},`
     );
+  }
+
+  if (namespace === 'media') {
+    lines.push(...MEDIA_UPLOAD_METHOD_LINES);
   }
 
   lines.push('  };');
@@ -148,6 +170,12 @@ import {
 ${functions.map((fn) => `  ${fn},`).join('\n')}
 } from './generated/sdk.gen';
 import { PostZenApiError, parseApiError } from './errors';
+import {
+  uploadMedia,
+  type MediaUploadSource,
+  type MediaUploadOptions,
+  type UploadedMedia,
+} from './upload';
 
 export interface ClientOptions {
   /**
