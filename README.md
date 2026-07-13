@@ -1,10 +1,17 @@
-# PostZen Node.js SDK
+<p align="center">
+  <img src=".github/assets/postzen-icon.png" alt="PostZen" width="96" />
+</p>
 
-Official Node.js SDK for the [PostZen](https://postzen.dev) social publishing API — manage profiles, connect social accounts, upload media, and schedule or publish posts against `https://api.postzen.dev`, with full TypeScript types.
+<h1 align="center">PostZen Node.js SDK</h1>
 
-[![npm version](https://img.shields.io/npm/v/%40postzen%2Fnode)](https://www.npmjs.com/package/@postzen/node) [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://www.npmjs.com/package/@postzen/node) [![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://www.npmjs.com/package/@postzen/node)
+<p align="center">
+  <a href="https://www.npmjs.com/package/@postzen/node"><img src="https://img.shields.io/npm/v/%40postzen%2Fnode" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/@postzen/node"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license" /></a>
+</p>
 
-This package is auto-generated: when the [PostZen OpenAPI spec](https://docs.postzen.dev/api-reference) changes, CI regenerates the client, types, and the reference below from `openapi.json` and publishes a new release, so the SDK always matches the current API. The same pipeline keeps the [Python SDK](https://github.com/postzen-dev/postzen-python), the [CLI](https://github.com/postzen-dev/postzen-cli), and the [MCP server](https://docs.postzen.dev/mcp) in sync.
+<p align="center"><strong>One API to post everywhere. 8 platforms, zero headaches.</strong></p>
+
+The official Node.js SDK for the [PostZen API](https://docs.postzen.dev) — schedule and publish social media posts across X/Twitter, Instagram, TikTok, LinkedIn, Facebook, YouTube, Threads, and Pinterest with a single integration.
 
 ## Installation
 
