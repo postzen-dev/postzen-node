@@ -79,6 +79,29 @@ describe('Endpoint Methods', () => {
       expect(client.posts.createPost).toBeTypeOf('function');
     });
 
+    it('has listPosts', () => {
+      expect(client.posts.listPosts).toBeDefined();
+      expect(client.posts.listPosts).toBeTypeOf('function');
+    });
+
+  });
+
+  describe('apikeys', () => {
+    it('has createApiKey', () => {
+      expect(client.apikeys.createApiKey).toBeDefined();
+      expect(client.apikeys.createApiKey).toBeTypeOf('function');
+    });
+
+    it('has deleteApiKey', () => {
+      expect(client.apikeys.deleteApiKey).toBeDefined();
+      expect(client.apikeys.deleteApiKey).toBeTypeOf('function');
+    });
+
+    it('has listApiKeys', () => {
+      expect(client.apikeys.listApiKeys).toBeDefined();
+      expect(client.apikeys.listApiKeys).toBeTypeOf('function');
+    });
+
   });
 
 });

@@ -7,14 +7,18 @@ import packageJson from '../package.json';
 import { createClient, createConfig, type Client } from './generated/client';
 import {
   completeConnect,
+  createApiKey,
   createConnectUrl,
   createMediaPresign,
   createPost,
   createProfile,
+  deleteApiKey,
   deleteProfile,
   disconnectAccount,
   getProfile,
   listAccounts,
+  listApiKeys,
+  listPosts,
   listProfiles,
   updateProfile,
 } from './generated/sdk.gen';
@@ -230,6 +234,16 @@ export class PostZen {
    */
   posts = {
     createPost: ((options?: Parameters<typeof createPost>[0]) => createPost(this._withRequestOptions(options) as Parameters<typeof createPost>[0])) as typeof createPost,
+    listPosts: ((options?: Parameters<typeof listPosts>[0]) => listPosts(this._withRequestOptions(options) as Parameters<typeof listPosts>[0])) as typeof listPosts,
+  };
+
+  /**
+   * apikeys API
+   */
+  apikeys = {
+    createApiKey: ((options?: Parameters<typeof createApiKey>[0]) => createApiKey(this._withRequestOptions(options) as Parameters<typeof createApiKey>[0])) as typeof createApiKey,
+    deleteApiKey: ((options?: Parameters<typeof deleteApiKey>[0]) => deleteApiKey(this._withRequestOptions(options) as Parameters<typeof deleteApiKey>[0])) as typeof deleteApiKey,
+    listApiKeys: ((options?: Parameters<typeof listApiKeys>[0]) => listApiKeys(this._withRequestOptions(options) as Parameters<typeof listApiKeys>[0])) as typeof listApiKeys,
   };
 
   constructor(options: ClientOptions = {}) {

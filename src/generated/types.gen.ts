@@ -124,6 +124,19 @@ export type AccountsListResponse = {
     pagination?: Pagination;
 };
 
+export type PostsListResponse = {
+    posts: Array<ApiPost>;
+    pagination: Pagination;
+};
+
+export type RateLimitError = {
+    error: 'rate_limited';
+    /**
+     * Number of seconds to wait before retrying.
+     */
+    retryAfter: number;
+};
+
 export type ConnectStartResponse = {
     /**
      * URL to redirect the user to for platform authorization.
@@ -251,15 +264,33 @@ export type CreatePostTarget = {
  */
 export type PostPlatformSettings = InstagramSettings | FacebookSettings | ThreadsSettings | TikTokSettings | LinkedInSettings | XSettings | YouTubeSettings | PinterestSettings | BlueskySettings;
 
+/**
+ * Instagram target settings. `postType` selects the format: `feed` and `story` take exactly one media item, `reel` takes exactly one video, and `carousel` takes 2–10 media items (images and videos may be mixed). Captions are limited to 2,200 characters.
+ */
 export type InstagramSettings = {
+    /**
+     * Instagram post format. `feed` (default) and `story` publish a single media item; `reel` publishes a single video; `carousel` publishes 2–10 ordered media items and may mix images and videos. Sending multiple media items with `feed` returns a validation error directing you to `carousel`.
+     */
     postType?: 'feed' | 'story' | 'reel' | 'carousel';
+    /**
+     * Up to three Instagram usernames to invite as collaborators. Supported on feed, reel, and carousel posts.
+     */
     collaborators?: Array<string>;
+    /**
+     * Photo tags with relative `x`/`y` coordinates from 0 to 1. Feed posts only — user tags are not supported on carousels, reels, or stories.
+     */
     userTags?: Array<{
         username: string;
         x: number;
         y: number;
     }>;
+    /**
+     * Posts a first comment after publishing. Supported on feed, reel, and carousel posts. Maximum 2,200 characters.
+     */
     firstComment?: string;
+    /**
+     * Reels only. Defaults to `true`. Set to `false` to keep the reel off the profile feed.
+     */
     shareToFeed?: boolean;
 };
 
@@ -288,6 +319,10 @@ export type TikTokSettings = {
 
 export type LinkedInSettings = {
     visibility?: 'PUBLIC' | 'CONNECTIONS';
+    /**
+     * Optional title for video posts, shown on the LinkedIn video player. Ignored for non-video posts.
+     */
+    videoTitle?: string;
 };
 
 export type XSettings = {
@@ -368,6 +403,85 @@ export type CreatePostResponse = {
 export type CreatePostReplayResponse = {
     existingPost: ApiPost;
     message: 'Post already exists for this request id';
+};
+
+export type ApiKeyProfileRef = {
+    /**
+     * PostZen profile id.
+     */
+    _id: string;
+    name: string;
+    /**
+     * Hex color in `#rrggbb` format.
+     */
+    color: string;
+};
+
+export type ApiKey = {
+    /**
+     * API key id.
+     */
+    id: string;
+    /**
+     * Human-readable label.
+     */
+    name: string;
+    /**
+     * Masked preview of the key, for example `pzn_live_a1b2c3d4e...`. The full key is never retrievable after creation.
+     */
+    keyPreview: string;
+    createdAt: string;
+    /**
+     * Last time the key authenticated a request, or `null` if it has never been used.
+     */
+    lastUsedAt: string | null;
+    /**
+     * `full` grants access to all profiles; `profiles` restricts the key to `profileIds`.
+     */
+    scope: 'full' | 'profiles';
+    /**
+     * Profiles the key is restricted to. Empty for full-scope keys.
+     */
+    profileIds: Array<ApiKeyProfileRef>;
+    /**
+     * `read` keys may only call `GET` endpoints; `read-write` keys may call every endpoint.
+     */
+    permission: 'read-write' | 'read';
+};
+
+export type ApiKeyWithSecret = ApiKey & {
+    /**
+     * The full API key. Shown only once in the create response — store it securely, as it cannot be retrieved again.
+     */
+    key: string;
+};
+
+export type ApiKeysListResponse = {
+    apiKeys: Array<ApiKey>;
+};
+
+export type ApiKeyCreateRequest = {
+    /**
+     * Human-readable label for the key.
+     */
+    name: string;
+    /**
+     * `full` grants access to all profiles; `profiles` restricts the key to `profileIds`.
+     */
+    scope?: 'full' | 'profiles';
+    /**
+     * PostZen profile ids. Required when `scope` is `profiles`, and forbidden when `scope` is `full`.
+     */
+    profileIds?: Array<string>;
+    /**
+     * `read` keys may only call `GET` endpoints.
+     */
+    permission?: 'read-write' | 'read';
+};
+
+export type ApiKeyCreateResponse = {
+    message: string;
+    apiKey: ApiKeyWithSecret;
 };
 
 export type ListProfilesData = {
@@ -824,6 +938,84 @@ export type CreateMediaPresignResponses = {
 
 export type CreateMediaPresignResponse = CreateMediaPresignResponses[keyof CreateMediaPresignResponses];
 
+export type ListPostsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Filter posts by profile id.
+         */
+        profileId?: string;
+        /**
+         * Filter posts to those targeting a specific connected account.
+         */
+        accountId?: string;
+        /**
+         * Filter posts to those with a target on this platform. `twitter` is accepted as an alias for `x`.
+         */
+        platform?: PublicPlatformInput;
+        /**
+         * Filter posts by status.
+         */
+        status?: 'draft' | 'scheduled' | 'queued' | 'publishing' | 'published' | 'partially_failed' | 'failed' | 'canceled';
+        /**
+         * Only include posts scheduled on or after this ISO 8601 timestamp. Posts without a scheduled time are excluded when a date filter is supplied.
+         */
+        dateFrom?: string;
+        /**
+         * Only include posts scheduled on or before this ISO 8601 timestamp. Posts without a scheduled time are excluded when a date filter is supplied.
+         */
+        dateTo?: string;
+        /**
+         * Sort order. `createdAt` sorts by creation time (newest first). `scheduledFor` sorts by scheduled time (newest first) and excludes posts without a scheduled time.
+         */
+        sortBy?: 'createdAt' | 'scheduledFor';
+        /**
+         * 1-based page number. Defaults to 1.
+         */
+        page?: number;
+        /**
+         * Page size. Defaults to 20.
+         */
+        limit?: number;
+    };
+    url: '/v1/posts';
+};
+
+export type ListPostsErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+};
+
+export type ListPostsError = ListPostsErrors[keyof ListPostsErrors];
+
+export type ListPostsResponses = {
+    /**
+     * Posts returned.
+     */
+    200: PostsListResponse;
+};
+
+export type ListPostsResponse = ListPostsResponses[keyof ListPostsResponses];
+
 export type CreatePostData = {
     body: CreatePostRequest;
     headers?: {
@@ -870,6 +1062,114 @@ export type CreatePostResponses = {
 };
 
 export type CreatePostResponse2 = CreatePostResponses[keyof CreatePostResponses];
+
+export type ListApiKeysData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/api-keys';
+};
+
+export type ListApiKeysErrors = {
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type ListApiKeysError = ListApiKeysErrors[keyof ListApiKeysErrors];
+
+export type ListApiKeysResponses = {
+    /**
+     * API keys returned.
+     */
+    200: ApiKeysListResponse;
+};
+
+export type ListApiKeysResponse = ListApiKeysResponses[keyof ListApiKeysResponses];
+
+export type CreateApiKeyData = {
+    body: ApiKeyCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/api-keys';
+};
+
+export type CreateApiKeyErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type CreateApiKeyError = CreateApiKeyErrors[keyof CreateApiKeyErrors];
+
+export type CreateApiKeyResponses = {
+    /**
+     * API key created.
+     */
+    201: ApiKeyCreateResponse;
+};
+
+export type CreateApiKeyResponse = CreateApiKeyResponses[keyof CreateApiKeyResponses];
+
+export type DeleteApiKeyData = {
+    body?: never;
+    path: {
+        /**
+         * PostZen API key id.
+         */
+        keyId: string;
+    };
+    query?: never;
+    url: '/v1/api-keys/{keyId}';
+};
+
+export type DeleteApiKeyErrors = {
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * No API key exists with the given id.
+     */
+    404: ErrorResponse;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type DeleteApiKeyError = DeleteApiKeyErrors[keyof DeleteApiKeyErrors];
+
+export type DeleteApiKeyResponses = {
+    /**
+     * API key deleted.
+     */
+    200: MessageResponse;
+};
+
+export type DeleteApiKeyResponse = DeleteApiKeyResponses[keyof DeleteApiKeyResponses];
 
 export type ClientOptions = {
     baseUrl: 'https://api.postzen.dev' | (string & {});

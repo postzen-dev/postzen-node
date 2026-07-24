@@ -323,6 +323,7 @@ Error classes:
 ### Posts
 | Method | Description |
 |--------|-------------|
+| `posts.listPosts()` | List posts |
 | `posts.createPost()` | Create a post |
 
 ## Requirements
