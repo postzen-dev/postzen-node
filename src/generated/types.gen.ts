@@ -342,7 +342,7 @@ export type PinterestSettings = {
     /**
      * Pinterest board to publish the pin to.
      */
-    boardId?: string;
+    boardId: string;
     /**
      * Pin title.
      */
