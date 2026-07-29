@@ -104,4 +104,37 @@ describe('Endpoint Methods', () => {
 
   });
 
+  describe('analytics', () => {
+    it('has getAnalytics', () => {
+      expect(client.analytics.getAnalytics).toBeDefined();
+      expect(client.analytics.getAnalytics).toBeTypeOf('function');
+    });
+
+    it('has getBestTimeToPost', () => {
+      expect(client.analytics.getBestTimeToPost).toBeDefined();
+      expect(client.analytics.getBestTimeToPost).toBeTypeOf('function');
+    });
+
+    it('has getDailyMetrics', () => {
+      expect(client.analytics.getDailyMetrics).toBeDefined();
+      expect(client.analytics.getDailyMetrics).toBeTypeOf('function');
+    });
+
+    it('has getFollowerStats', () => {
+      expect(client.analytics.getFollowerStats).toBeDefined();
+      expect(client.analytics.getFollowerStats).toBeTypeOf('function');
+    });
+
+    it('has getPostTimeline', () => {
+      expect(client.analytics.getPostTimeline).toBeDefined();
+      expect(client.analytics.getPostTimeline).toBeTypeOf('function');
+    });
+
+    it('has syncExternalPosts', () => {
+      expect(client.analytics.syncExternalPosts).toBeDefined();
+      expect(client.analytics.syncExternalPosts).toBeTypeOf('function');
+    });
+
+  });
+
 });

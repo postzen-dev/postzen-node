@@ -4,6 +4,201 @@ export type ErrorResponse = {
     error: string;
 };
 
+export type AnalyticsErrorResponse = ErrorResponse & {
+    platform?: AnalyticsPlatform;
+    /**
+     * Original error detail returned by the social platform.
+     */
+    platformError?: string;
+};
+
+/**
+ * A `YYYY-MM-DD` calendar date or ISO 8601 datetime.
+ */
+export type AnalyticsDate = string;
+
+export type AnalyticsPlatform = 'x' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest' | 'bluesky' | 'telegram';
+
+export type AnalyticsSource = 'all' | 'postzen' | 'external';
+
+export type AnalyticsMetricTotals = {
+    impressions: number;
+    reach: number;
+    likes: number;
+    comments: number;
+    shares: number;
+    saves: number;
+    clicks: number;
+    views: number;
+};
+
+export type AnalyticsMetrics = AnalyticsMetricTotals & {
+    /**
+     * Interaction count divided by impressions, multiplied by 100 and rounded to two decimals.
+     */
+    engagementRate: number;
+    lastUpdated: string | null;
+};
+
+export type AnalyticsMediaItem = {
+    type: string;
+    url: string;
+    thumbnail: string;
+};
+
+export type PlatformAnalytics = {
+    platform: AnalyticsPlatform;
+    status: string;
+    platformPostId: string;
+    accountId: string;
+    accountUsername: string;
+    analytics: AnalyticsMetrics;
+    syncStatus: 'synced' | 'pending' | 'failed';
+    platformPostUrl: string | null;
+    errorMessage: string | null;
+};
+
+export type AnalyticsPost = {
+    postId: string;
+    postzenPostId: string | null;
+    status: string;
+    content: string;
+    scheduledFor: string;
+    publishedAt: string;
+    analytics: AnalyticsMetrics;
+    platformAnalytics: Array<PlatformAnalytics>;
+    platform: AnalyticsPlatform;
+    platformPostUrl: string | null;
+    isExternal: boolean;
+    syncStatus: 'synced' | 'pending' | 'failed';
+    message: string | null;
+    thumbnailUrl: string | null;
+    mediaType: 'image' | 'video' | 'text' | 'carousel' | null;
+    mediaItems: Array<AnalyticsMediaItem>;
+};
+
+export type AnalyticsOverview = {
+    totalPosts: number;
+    totals: AnalyticsMetricTotals;
+    avgEngagementRate: number;
+};
+
+export type AnalyticsListResponse = {
+    /**
+     * One entry per PostZen post, not per platform target. A post published to several platforms appears once, with one `platformAnalytics` entry per platform and `analytics` summed across them; `platform` is that post's only platform when it has one. Posts imported from a platform always appear on their own. `pagination.total` and `overview.totalPosts` count these grouped entries.
+     */
+    posts: Array<AnalyticsPost>;
+    pagination: Pagination;
+    overview: AnalyticsOverview;
+    /**
+     * True when the requested window contained more posts than a single response can scan. `pagination.total` and `overview` then describe the most recent slice of the window rather than all of it; narrow `dateFrom`/`dateTo`, `accountId`, or `platform` to get exact totals.
+     */
+    truncated: boolean;
+};
+
+export type PostTimelineResponse = {
+    postId: string;
+    timeline: Array<{
+        date: string;
+        platform: AnalyticsPlatform;
+        platformPostId: string;
+        impressions: number;
+        reach: number;
+        likes: number;
+        comments: number;
+        shares: number;
+        saves: number;
+        clicks: number;
+        views: number;
+    }>;
+};
+
+export type DailyMetricsResponse = {
+    dailyData: Array<{
+        date: string;
+        postCount: number;
+        platforms: {
+            [key: string]: number;
+        };
+        metrics: AnalyticsMetricTotals;
+    }>;
+    platformBreakdown: Array<AnalyticsMetricTotals & {
+        platform: AnalyticsPlatform;
+        postCount: number;
+    }>;
+};
+
+export type BestTimeResponse = {
+    slots: Array<{
+        /**
+         * UTC day of week, where 0 is Sunday.
+         */
+        day_of_week: number;
+        hour: number;
+        avg_engagement: number;
+        post_count: number;
+    }>;
+};
+
+export type FollowerStatsResponse = {
+    accounts: Array<{
+        _id: string;
+        platform: AnalyticsPlatform;
+        username: string;
+        currentFollowers: number;
+        growth: number;
+        growthPercentage: number;
+        dataPoints: number;
+    }>;
+    stats: {
+        [key: string]: Array<{
+            date: string;
+            followers: number;
+        }>;
+    };
+    dateRange: {
+        from: string;
+        to: string;
+    };
+    granularity: 'daily' | 'weekly' | 'monthly';
+};
+
+export type SyncExternalPostsRequest = {
+    accountId: string;
+    /**
+     * Optional platform post URL to locate.
+     */
+    url?: string;
+    /**
+     * Optional platform post id to locate.
+     */
+    postId?: string;
+};
+
+export type ExternalSyncedPost = {
+    platform: AnalyticsPlatform;
+    platformPostId: string;
+    platformPostUrl: string;
+    content: string;
+    publishedAt: string;
+    mediaType: string;
+    mediaUrl: string;
+    thumbnailUrl: string;
+    mediaItems: Array<AnalyticsMediaItem>;
+    analytics: AnalyticsMetrics;
+};
+
+export type SyncExternalPostsResponse = {
+    synced: {
+        postsFound: number;
+        postsSynced: number;
+        skipped: boolean;
+    };
+    found: boolean;
+    post: ExternalSyncedPost | null;
+    posts: Array<ExternalSyncedPost>;
+};
+
 export type ConnectCompleteErrorResponse = {
     /**
      * Human-readable message, or a camelCase error code (for example `oauthCallbackFailed`) when the platform callback fails.
@@ -32,9 +227,9 @@ export type MessageResponse = {
     message: string;
 };
 
-export type PublicPlatformInput = 'twitter' | 'x' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest' | 'bluesky';
+export type PublicPlatformInput = 'twitter' | 'x' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest' | 'bluesky' | 'telegram';
 
-export type PublicPlatformOutput = 'twitter' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest' | 'bluesky';
+export type PublicPlatformOutput = 'twitter' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest' | 'bluesky' | 'telegram';
 
 export type Profile = {
     /**
@@ -262,7 +457,7 @@ export type CreatePostTarget = {
 /**
  * Platform-specific publishing options. Unknown keys are ignored.
  */
-export type PostPlatformSettings = InstagramSettings | FacebookSettings | ThreadsSettings | TikTokSettings | LinkedInSettings | XSettings | YouTubeSettings | PinterestSettings | BlueskySettings;
+export type PostPlatformSettings = InstagramSettings | FacebookSettings | ThreadsSettings | TikTokSettings | LinkedInSettings | XSettings | YouTubeSettings | PinterestSettings | BlueskySettings | TelegramSettings;
 
 /**
  * Instagram target settings. `postType` selects the format: `feed` and `story` take exactly one media item, `reel` takes exactly one video, and `carousel` takes 2–10 media items (images and videos may be mixed). Captions are limited to 2,200 characters.
@@ -367,6 +562,28 @@ export type BlueskySettings = {
      * When true, PostZen skips generating an external link preview card for the first URL in the post.
      */
     disableLinkCard?: boolean;
+};
+
+/**
+ * Telegram target settings. Text-only posts allow 4,096 characters; attaching any media caps the text at 1,024 characters as a caption. A post carries 1-10 media items and may mix photos and videos in one album, but a GIF must be posted on its own. Telegram reports no post analytics.
+ */
+export type TelegramSettings = {
+    /**
+     * Formatting mode for the message or caption. Omit to send plain text, which is the default. `html` is recommended: it only requires escaping `<`, `>`, and `&`, whereas `markdownv2` requires escaping every one of `_ * [ ] ( ) ~ ` > # + - = | { } . !` and rejects the whole message otherwise.
+     */
+    parseMode?: 'html' | 'markdownv2';
+    /**
+     * When true, members receive the post silently, with no sound or vibration.
+     */
+    disableNotification?: boolean;
+    /**
+     * When true, suppresses the link preview card for URLs in the text. Applies to text-only posts; a post with media has no link preview.
+     */
+    disableLinkPreview?: boolean;
+    /**
+     * When true, Telegram blocks forwarding and saving of the post.
+     */
+    protectContent?: boolean;
 };
 
 export type ApiPost = {
@@ -1062,6 +1279,433 @@ export type CreatePostResponses = {
 };
 
 export type CreatePostResponse2 = CreatePostResponses[keyof CreatePostResponses];
+
+export type GetAnalyticsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * PostZen post id or platform post id. When supplied, the response is a single analytics object.
+         */
+        postId?: string;
+        /**
+         * Platform slug, or `all` for every platform.
+         */
+        platform?: AnalyticsPlatform | 'all';
+        /**
+         * Filter by PostZen profile id.
+         */
+        profileId?: string;
+        /**
+         * Filter by connected social account id.
+         */
+        accountId?: string;
+        /**
+         * Filter by posts published through PostZen or imported from a platform.
+         */
+        source?: AnalyticsSource;
+        /**
+         * Inclusive range start. Accepts `YYYY-MM-DD` or an ISO 8601 datetime. Defaults to 90 days before `toDate`.
+         */
+        fromDate?: AnalyticsDate;
+        /**
+         * Inclusive range end. Accepts `YYYY-MM-DD` or an ISO 8601 datetime. Defaults to the current time.
+         */
+        toDate?: AnalyticsDate;
+        /**
+         * Page size.
+         */
+        limit?: number;
+        /**
+         * 1-based page number.
+         */
+        page?: number;
+        /**
+         * Field used to order list results.
+         */
+        sortBy?: 'date' | 'engagement' | 'impressions' | 'reach' | 'likes' | 'comments' | 'shares' | 'saves' | 'clicks' | 'views';
+        /**
+         * Sort direction.
+         */
+        order?: 'asc' | 'desc';
+    };
+    url: '/v1/analytics';
+};
+
+export type GetAnalyticsErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * Analytics entitlement required.
+     */
+    402: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * All platform analytics fetches failed.
+     */
+    424: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type GetAnalyticsError = GetAnalyticsErrors[keyof GetAnalyticsErrors];
+
+export type GetAnalyticsResponses = {
+    /**
+     * Single-post analytics or a paginated analytics list.
+     */
+    200: AnalyticsPost | AnalyticsListResponse;
+    /**
+     * The first analytics synchronization is pending; stored post data is returned.
+     */
+    202: AnalyticsPost;
+};
+
+export type GetAnalyticsResponse = GetAnalyticsResponses[keyof GetAnalyticsResponses];
+
+export type GetPostTimelineData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * PostZen post id, external post id, analytics row id, or platform post id.
+         */
+        postId: string;
+        /**
+         * Inclusive range start. Defaults to 90 days before `toDate`.
+         */
+        fromDate?: AnalyticsDate;
+        /**
+         * Inclusive range end. Defaults to the current time.
+         */
+        toDate?: AnalyticsDate;
+    };
+    url: '/v1/analytics/post-timeline';
+};
+
+export type GetPostTimelineErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * Analytics entitlement required.
+     */
+    402: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type GetPostTimelineError = GetPostTimelineErrors[keyof GetPostTimelineErrors];
+
+export type GetPostTimelineResponses = {
+    /**
+     * Post timeline returned.
+     */
+    200: PostTimelineResponse;
+};
+
+export type GetPostTimelineResponse = GetPostTimelineResponses[keyof GetPostTimelineResponses];
+
+export type GetDailyMetricsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Filter by platform.
+         */
+        platform?: AnalyticsPlatform;
+        /**
+         * Filter by PostZen profile id.
+         */
+        profileId?: string;
+        /**
+         * Filter by connected social account id.
+         */
+        accountId?: string;
+        /**
+         * Inclusive range start. Defaults to 180 days before `toDate`.
+         */
+        fromDate?: AnalyticsDate;
+        /**
+         * Inclusive range end. Defaults to the current time.
+         */
+        toDate?: AnalyticsDate;
+        /**
+         * Filter by PostZen-published or externally imported posts.
+         */
+        source?: AnalyticsSource;
+        /**
+         * Controls whether lifetime metrics are assigned to publish dates or daily deltas to receipt dates.
+         */
+        attribution?: 'publish' | 'received';
+    };
+    url: '/v1/analytics/daily-metrics';
+};
+
+export type GetDailyMetricsErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * Analytics entitlement required.
+     */
+    402: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type GetDailyMetricsError = GetDailyMetricsErrors[keyof GetDailyMetricsErrors];
+
+export type GetDailyMetricsResponses = {
+    /**
+     * Daily metrics returned.
+     */
+    200: DailyMetricsResponse;
+};
+
+export type GetDailyMetricsResponse = GetDailyMetricsResponses[keyof GetDailyMetricsResponses];
+
+export type GetBestTimeToPostData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Filter by platform.
+         */
+        platform?: AnalyticsPlatform;
+        /**
+         * Filter by PostZen profile id.
+         */
+        profileId?: string;
+        /**
+         * Filter by connected social account id.
+         */
+        accountId?: string;
+        /**
+         * Filter by PostZen-published or externally imported posts.
+         */
+        source?: AnalyticsSource;
+    };
+    url: '/v1/analytics/best-time';
+};
+
+export type GetBestTimeToPostErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * Analytics entitlement required.
+     */
+    402: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type GetBestTimeToPostError = GetBestTimeToPostErrors[keyof GetBestTimeToPostErrors];
+
+export type GetBestTimeToPostResponses = {
+    /**
+     * Best posting slots returned.
+     */
+    200: BestTimeResponse;
+};
+
+export type GetBestTimeToPostResponse = GetBestTimeToPostResponses[keyof GetBestTimeToPostResponses];
+
+export type GetFollowerStatsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Comma-separated connected account ids. Omit to include every accessible account.
+         */
+        accountIds?: string;
+        /**
+         * Filter by PostZen profile id.
+         */
+        profileId?: string;
+        /**
+         * Inclusive range start. Defaults to 30 days before `toDate`.
+         */
+        fromDate?: AnalyticsDate;
+        /**
+         * Inclusive range end. Defaults to the current time.
+         */
+        toDate?: AnalyticsDate;
+        /**
+         * Follower history bucket size.
+         */
+        granularity?: 'daily' | 'weekly' | 'monthly';
+    };
+    url: '/v1/accounts/follower-stats';
+};
+
+export type GetFollowerStatsErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * Analytics entitlement required.
+     */
+    402: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type GetFollowerStatsError = GetFollowerStatsErrors[keyof GetFollowerStatsErrors];
+
+export type GetFollowerStatsResponses = {
+    /**
+     * Follower statistics returned.
+     */
+    200: FollowerStatsResponse;
+};
+
+export type GetFollowerStatsResponse = GetFollowerStatsResponses[keyof GetFollowerStatsResponses];
+
+export type SyncExternalPostsData = {
+    body: SyncExternalPostsRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/posts/sync-external';
+};
+
+export type SyncExternalPostsErrors = {
+    /**
+     * Invalid request, unsupported platform, or platform synchronization failure.
+     */
+    400: AnalyticsErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * Analytics entitlement required.
+     */
+    402: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type SyncExternalPostsError = SyncExternalPostsErrors[keyof SyncExternalPostsErrors];
+
+export type SyncExternalPostsResponses = {
+    /**
+     * External posts synchronized or served from the debounce cache.
+     */
+    200: SyncExternalPostsResponse;
+};
+
+export type SyncExternalPostsResponse2 = SyncExternalPostsResponses[keyof SyncExternalPostsResponses];
 
 export type ListApiKeysData = {
     body?: never;

@@ -15,11 +15,17 @@ import {
   deleteApiKey,
   deleteProfile,
   disconnectAccount,
+  getAnalytics,
+  getBestTimeToPost,
+  getDailyMetrics,
+  getFollowerStats,
+  getPostTimeline,
   getProfile,
   listAccounts,
   listApiKeys,
   listPosts,
   listProfiles,
+  syncExternalPosts,
   updateProfile,
 } from './generated/sdk.gen';
 import { PostZenApiError, parseApiError } from './errors';
@@ -244,6 +250,18 @@ export class PostZen {
     createApiKey: ((options?: Parameters<typeof createApiKey>[0]) => createApiKey(this._withRequestOptions(options) as Parameters<typeof createApiKey>[0])) as typeof createApiKey,
     deleteApiKey: ((options?: Parameters<typeof deleteApiKey>[0]) => deleteApiKey(this._withRequestOptions(options) as Parameters<typeof deleteApiKey>[0])) as typeof deleteApiKey,
     listApiKeys: ((options?: Parameters<typeof listApiKeys>[0]) => listApiKeys(this._withRequestOptions(options) as Parameters<typeof listApiKeys>[0])) as typeof listApiKeys,
+  };
+
+  /**
+   * analytics API
+   */
+  analytics = {
+    getAnalytics: ((options?: Parameters<typeof getAnalytics>[0]) => getAnalytics(this._withRequestOptions(options) as Parameters<typeof getAnalytics>[0])) as typeof getAnalytics,
+    getBestTimeToPost: ((options?: Parameters<typeof getBestTimeToPost>[0]) => getBestTimeToPost(this._withRequestOptions(options) as Parameters<typeof getBestTimeToPost>[0])) as typeof getBestTimeToPost,
+    getDailyMetrics: ((options?: Parameters<typeof getDailyMetrics>[0]) => getDailyMetrics(this._withRequestOptions(options) as Parameters<typeof getDailyMetrics>[0])) as typeof getDailyMetrics,
+    getFollowerStats: ((options?: Parameters<typeof getFollowerStats>[0]) => getFollowerStats(this._withRequestOptions(options) as Parameters<typeof getFollowerStats>[0])) as typeof getFollowerStats,
+    getPostTimeline: ((options?: Parameters<typeof getPostTimeline>[0]) => getPostTimeline(this._withRequestOptions(options) as Parameters<typeof getPostTimeline>[0])) as typeof getPostTimeline,
+    syncExternalPosts: ((options?: Parameters<typeof syncExternalPosts>[0]) => syncExternalPosts(this._withRequestOptions(options) as Parameters<typeof syncExternalPosts>[0])) as typeof syncExternalPosts,
   };
 
   constructor(options: ClientOptions = {}) {
