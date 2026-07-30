@@ -23,6 +23,8 @@ import {
   getProfile,
   listAccounts,
   listApiKeys,
+  listPostComments,
+  listPostReactions,
   listPosts,
   listProfiles,
   syncExternalPosts,
@@ -240,6 +242,8 @@ export class PostZen {
    */
   posts = {
     createPost: ((options?: Parameters<typeof createPost>[0]) => createPost(this._withRequestOptions(options) as Parameters<typeof createPost>[0])) as typeof createPost,
+    listPostComments: ((options?: Parameters<typeof listPostComments>[0]) => listPostComments(this._withRequestOptions(options) as Parameters<typeof listPostComments>[0])) as typeof listPostComments,
+    listPostReactions: ((options?: Parameters<typeof listPostReactions>[0]) => listPostReactions(this._withRequestOptions(options) as Parameters<typeof listPostReactions>[0])) as typeof listPostReactions,
     listPosts: ((options?: Parameters<typeof listPosts>[0]) => listPosts(this._withRequestOptions(options) as Parameters<typeof listPosts>[0])) as typeof listPosts,
   };
 

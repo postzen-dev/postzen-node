@@ -79,6 +79,16 @@ describe('Endpoint Methods', () => {
       expect(client.posts.createPost).toBeTypeOf('function');
     });
 
+    it('has listPostComments', () => {
+      expect(client.posts.listPostComments).toBeDefined();
+      expect(client.posts.listPostComments).toBeTypeOf('function');
+    });
+
+    it('has listPostReactions', () => {
+      expect(client.posts.listPostReactions).toBeDefined();
+      expect(client.posts.listPostReactions).toBeTypeOf('function');
+    });
+
     it('has listPosts', () => {
       expect(client.posts.listPosts).toBeDefined();
       expect(client.posts.listPosts).toBeTypeOf('function');

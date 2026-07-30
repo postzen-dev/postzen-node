@@ -324,6 +324,92 @@ export type PostsListResponse = {
     pagination: Pagination;
 };
 
+/**
+ * A comment LinkedIn holds on an organization post published through PostZen.
+ */
+export type LinkedInComment = {
+    /**
+     * LinkedIn's numeric comment id, unique within its thread.
+     */
+    id: string;
+    /**
+     * Composite comment URN — `urn:li:comment:(<threadUrn>,<id>)` — which every comment-scoped LinkedIn endpoint takes as its path parameter. Absent when LinkedIn omits it.
+     */
+    commentUrn?: string;
+    /**
+     * Comment body as plain text.
+     */
+    text: string;
+    /**
+     * URN of the member or organization that wrote the comment.
+     */
+    authorUrn: string;
+    /**
+     * Display name of the author, when LinkedIn returns one.
+     */
+    authorName?: string;
+    /**
+     * When the comment was created.
+     */
+    createdAt: string;
+    /**
+     * Likes on the comment, when LinkedIn returns a count.
+     */
+    likeCount?: number;
+    /**
+     * Replies to the comment, when LinkedIn returns a count.
+     */
+    replyCount?: number;
+};
+
+export type LinkedInCommentsResponse = {
+    comments: Array<LinkedInComment>;
+    /**
+     * Present when more comments are available. Pass it back as `cursor` to fetch the next page.
+     */
+    nextCursor?: string;
+};
+
+/**
+ * A single reaction LinkedIn holds on an organization post published through PostZen.
+ */
+export type LinkedInReaction = {
+    /**
+     * LinkedIn reaction type, such as `LIKE`, `PRAISE`, `EMPATHY`, `INTEREST`, `APPRECIATION`, or `ENTERTAINMENT`. Treat this as an open set — LinkedIn adds reaction types over time.
+     */
+    reactionType: string;
+    /**
+     * URN of the member or organization that reacted.
+     */
+    actorUrn: string;
+    /**
+     * When the reaction was recorded, when LinkedIn returns a timestamp.
+     */
+    createdAt?: string;
+};
+
+export type LinkedInReactionsResponse = {
+    reactions: Array<LinkedInReaction>;
+    /**
+     * Reaction count keyed by reaction type, tallied from the reactions in this response. Sum the pages yourself for a whole-post total.
+     */
+    totalsByType: {
+        [key: string]: number;
+    };
+    /**
+     * Present when more reactions are available. Pass it back as `cursor` to fetch the next page.
+     */
+    nextCursor?: string;
+};
+
+export type LinkedInSocialReadErrorResponse = ErrorResponse & {
+    /**
+     * Machine-readable failure reason.
+     */
+    code: 'notFound' | 'forbidden' | 'postNotPublished' | 'personalPostUnsupported' | 'orgScopesDisabled' | 'platformCapabilityMissing' | 'notConnected' | 'rateLimited' | 'requestFailed';
+    platform: 'linkedin';
+};
+
 export type RateLimitError = {
     error: 'rate_limited';
     /**
@@ -512,12 +598,42 @@ export type TikTokSettings = {
     brandOrganicToggle?: boolean;
 };
 
+/**
+ * LinkedIn target settings. A LinkedIn post carries exactly one media kind: no media (text only), 1–20 images, one MP4 video, or one document (PDF/DOC/DOCX/PPT/PPTX). Commentary is limited to 3,000 characters. Every key below is also accepted in `snake_case` (for example `first_comment` and `organization_urn`).
+ */
 export type LinkedInSettings = {
+    /**
+     * Who can see the post. `CONNECTIONS` is only valid for a member (personal profile) post — combining it with `organizationUrn` is a validation error, because a company page has no connections.
+     */
     visibility?: 'PUBLIC' | 'CONNECTIONS';
     /**
      * Optional title for video posts, shown on the LinkedIn video player. Ignored for non-video posts.
      */
     videoTitle?: string;
+    /**
+     * Title for a document (PDF carousel) post. LinkedIn requires a title on document posts; when this is omitted PostZen falls back to the uploaded file's name. Ignored for non-document posts.
+     */
+    documentTitle?: string;
+    /**
+     * Publish as a LinkedIn company page instead of the connected member. Accepts either the full URN (`urn:li:organization:12345`) or the bare numeric page id (`12345`), which PostZen expands to the URN. The connection must have been authorized with the organization scopes — reconnect the account if it was connected before company-page posting was enabled. Also accepted as `organizationId` / `organization_id`.
+     */
+    organizationUrn?: string;
+    /**
+     * Comment posted by the same author immediately after the post goes live. LinkedIn's comment composer caps this at 1,250 characters, tighter than the 3,000-character post body. Best-effort: a failure here is logged and never fails the post, and the post is never retried because of it.
+     */
+    firstComment?: string;
+    /**
+     * LinkedIn's Posts API never scrapes URLs, so a bare link renders as plain text. When this is `false` or omitted and the text contains a URL, PostZen attaches a link card for the first URL; because no scraped metadata is available, the card is titled with the URL's hostname (for example `example.com`). Set to `true` to keep the post as plain text with no card. Also accepted as `disableLinkCard`.
+     */
+    disableLinkPreview?: boolean;
+    /**
+     * LinkedIn post to quote-reshare. Accepts a public post permalink or a `urn:li:activity:` / `urn:li:share:` / `urn:li:ugcPost:` URN. Mutually exclusive with uploaded media.
+     */
+    reshareUrl?: string;
+    /**
+     * Restrict who sees the post to these countries, as uppercase ISO 3166-1 alpha-2 codes (for example `["US", "CA"]`). Up to 25 countries, and organization posts only — supplying this without `organizationUrn` is a validation error.
+     */
+    geoRestrictionCountries?: Array<string>;
 };
 
 export type XSettings = {
@@ -1279,6 +1395,156 @@ export type CreatePostResponses = {
 };
 
 export type CreatePostResponse2 = CreatePostResponses[keyof CreatePostResponses];
+
+export type ListPostCommentsData = {
+    body?: never;
+    path: {
+        /**
+         * PostZen post id. The LinkedIn post URN is not accepted here.
+         */
+        postId: string;
+    };
+    query?: {
+        /**
+         * Restrict the lookup to one LinkedIn target when the post was published to several LinkedIn accounts. PostZen account id.
+         */
+        accountId?: string;
+        /**
+         * Opaque pagination cursor. Pass the `nextCursor` from the previous response to fetch the next page.
+         */
+        cursor?: string;
+        /**
+         * Page size.
+         */
+        limit?: number;
+    };
+    url: '/v1/posts/{postId}/comments';
+};
+
+export type ListPostCommentsErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The post was authored by a member rather than a company page (`personalPostUnsupported`), the API key cannot access the post's profile (`forbidden`), organization engagement reads are disabled on the deployment (`orgScopesDisabled`), or the connection is missing `r_organization_social_feed` (`platformCapabilityMissing`).
+     */
+    403: LinkedInSocialReadErrorResponse;
+    /**
+     * No post exists with the given id, it is not visible to this API key, or it has no LinkedIn target.
+     */
+    404: LinkedInSocialReadErrorResponse;
+    /**
+     * The post's LinkedIn target has not published yet, so it has no URN to read engagement for.
+     */
+    409: LinkedInSocialReadErrorResponse;
+    /**
+     * The LinkedIn account behind the post is no longer connected.
+     */
+    424: LinkedInSocialReadErrorResponse;
+    /**
+     * LinkedIn rate limited the upstream request. PostZen's own per-account rate limiter also returns `429`, with `{"error":"rate_limited"}` and a `Retry-After` header.
+     */
+    429: LinkedInSocialReadErrorResponse;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+    /**
+     * LinkedIn could not answer the request.
+     */
+    502: LinkedInSocialReadErrorResponse;
+};
+
+export type ListPostCommentsError = ListPostCommentsErrors[keyof ListPostCommentsErrors];
+
+export type ListPostCommentsResponses = {
+    /**
+     * Comments returned.
+     */
+    200: LinkedInCommentsResponse;
+};
+
+export type ListPostCommentsResponse = ListPostCommentsResponses[keyof ListPostCommentsResponses];
+
+export type ListPostReactionsData = {
+    body?: never;
+    path: {
+        /**
+         * PostZen post id. The LinkedIn post URN is not accepted here.
+         */
+        postId: string;
+    };
+    query?: {
+        /**
+         * Restrict the lookup to one LinkedIn target when the post was published to several LinkedIn accounts. PostZen account id.
+         */
+        accountId?: string;
+        /**
+         * Opaque pagination cursor. Pass the `nextCursor` from the previous response to fetch the next page.
+         */
+        cursor?: string;
+        /**
+         * Page size.
+         */
+        limit?: number;
+    };
+    url: '/v1/posts/{postId}/reactions';
+};
+
+export type ListPostReactionsErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The post was authored by a member rather than a company page (`personalPostUnsupported`), the API key cannot access the post's profile (`forbidden`), organization engagement reads are disabled on the deployment (`orgScopesDisabled`), or the connection is missing `r_organization_social_feed` (`platformCapabilityMissing`).
+     */
+    403: LinkedInSocialReadErrorResponse;
+    /**
+     * No post exists with the given id, it is not visible to this API key, or it has no LinkedIn target.
+     */
+    404: LinkedInSocialReadErrorResponse;
+    /**
+     * The post's LinkedIn target has not published yet, so it has no URN to read engagement for.
+     */
+    409: LinkedInSocialReadErrorResponse;
+    /**
+     * The LinkedIn account behind the post is no longer connected.
+     */
+    424: LinkedInSocialReadErrorResponse;
+    /**
+     * LinkedIn rate limited the upstream request. PostZen's own per-account rate limiter also returns `429`, with `{"error":"rate_limited"}` and a `Retry-After` header.
+     */
+    429: LinkedInSocialReadErrorResponse;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+    /**
+     * LinkedIn could not answer the request.
+     */
+    502: LinkedInSocialReadErrorResponse;
+};
+
+export type ListPostReactionsError = ListPostReactionsErrors[keyof ListPostReactionsErrors];
+
+export type ListPostReactionsResponses = {
+    /**
+     * Reactions returned.
+     */
+    200: LinkedInReactionsResponse;
+};
+
+export type ListPostReactionsResponse = ListPostReactionsResponses[keyof ListPostReactionsResponses];
 
 export type GetAnalyticsData = {
     body?: never;

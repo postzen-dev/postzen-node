@@ -323,6 +323,8 @@ Error classes:
 ### Posts
 | Method | Description |
 |--------|-------------|
+| `posts.listPostComments()` | List comments on a LinkedIn post |
+| `posts.listPostReactions()` | List reactions on a LinkedIn post |
 | `posts.listPosts()` | List posts |
 | `posts.createPost()` | Create a post |
 
