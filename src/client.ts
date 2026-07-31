@@ -10,6 +10,7 @@ import {
   createApiKey,
   createConnectUrl,
   createMediaPresign,
+  createPinterestBoard,
   createPost,
   createProfile,
   deleteApiKey,
@@ -19,15 +20,19 @@ import {
   getBestTimeToPost,
   getDailyMetrics,
   getFollowerStats,
+  getPinterestBoards,
   getPostTimeline,
   getProfile,
   listAccounts,
   listApiKeys,
+  listPinterestBoardsForSelection,
   listPostComments,
   listPostReactions,
   listPosts,
   listProfiles,
+  selectPinterestBoard,
   syncExternalPosts,
+  updatePinterestBoards,
   updateProfile,
 } from './generated/sdk.gen';
 import { PostZenApiError, parseApiError } from './errors';
@@ -206,8 +211,11 @@ export class PostZen {
    * Accounts API - Manage connected social accounts
    */
   accounts = {
+    createPinterestBoard: ((options?: Parameters<typeof createPinterestBoard>[0]) => createPinterestBoard(this._withRequestOptions(options) as Parameters<typeof createPinterestBoard>[0])) as typeof createPinterestBoard,
     disconnectAccount: ((options?: Parameters<typeof disconnectAccount>[0]) => disconnectAccount(this._withRequestOptions(options) as Parameters<typeof disconnectAccount>[0])) as typeof disconnectAccount,
+    getPinterestBoards: ((options?: Parameters<typeof getPinterestBoards>[0]) => getPinterestBoards(this._withRequestOptions(options) as Parameters<typeof getPinterestBoards>[0])) as typeof getPinterestBoards,
     listAccounts: ((options?: Parameters<typeof listAccounts>[0]) => listAccounts(this._withRequestOptions(options) as Parameters<typeof listAccounts>[0])) as typeof listAccounts,
+    updatePinterestBoards: ((options?: Parameters<typeof updatePinterestBoards>[0]) => updatePinterestBoards(this._withRequestOptions(options) as Parameters<typeof updatePinterestBoards>[0])) as typeof updatePinterestBoards,
   };
 
   /**
@@ -216,6 +224,8 @@ export class PostZen {
   connect = {
     completeConnect: ((options?: Parameters<typeof completeConnect>[0]) => completeConnect(this._withRequestOptions(options) as Parameters<typeof completeConnect>[0])) as typeof completeConnect,
     createConnectUrl: ((options?: Parameters<typeof createConnectUrl>[0]) => createConnectUrl(this._withRequestOptions(options) as Parameters<typeof createConnectUrl>[0])) as typeof createConnectUrl,
+    listPinterestBoardsForSelection: ((options?: Parameters<typeof listPinterestBoardsForSelection>[0]) => listPinterestBoardsForSelection(this._withRequestOptions(options) as Parameters<typeof listPinterestBoardsForSelection>[0])) as typeof listPinterestBoardsForSelection,
+    selectPinterestBoard: ((options?: Parameters<typeof selectPinterestBoard>[0]) => selectPinterestBoard(this._withRequestOptions(options) as Parameters<typeof selectPinterestBoard>[0])) as typeof selectPinterestBoard,
   };
 
   /**

@@ -4,6 +4,56 @@ export type ErrorResponse = {
     error: string;
 };
 
+export type PinterestBoard = {
+    id: string;
+    name: string;
+    description?: string;
+    privacy?: 'PUBLIC' | 'PROTECTED' | 'SECRET';
+    pinCount?: number;
+};
+
+export type PinterestBoardsResponse = {
+    boards: Array<PinterestBoard>;
+};
+
+export type PinterestBoardResponse = {
+    board: {
+        id: string;
+        name: string;
+        description?: string;
+        privacy?: 'PUBLIC' | 'PROTECTED' | 'SECRET';
+    };
+};
+
+export type PinterestCreateBoardRequest = {
+    name: string;
+    description?: string;
+    privacy?: 'PUBLIC' | 'PROTECTED' | 'SECRET';
+};
+
+export type PinterestDefaultBoardRequest = {
+    defaultBoardId: string;
+    defaultBoardName?: string;
+};
+
+export type PinterestDefaultBoardResponse = {
+    message: 'Default Pinterest board updated successfully';
+    account: Account;
+};
+
+export type PinterestSelectBoardRequest = {
+    state: string;
+    boardId: string;
+    boardName?: string;
+    redirectUrl?: string;
+};
+
+export type PinterestSelectBoardResponse = {
+    message: 'Pinterest connected successfully with default board';
+    account: Account;
+    redirectUrl?: string;
+};
+
 export type AnalyticsErrorResponse = ErrorResponse & {
     platform?: AnalyticsPlatform;
     /**
@@ -305,6 +355,14 @@ export type Account = {
     isActive: boolean;
     connectedAt: string;
     lastSyncedAt?: string;
+    /**
+     * Default Pinterest board id. Present only when one has been selected for a Pinterest account.
+     */
+    defaultBoardId?: string;
+    /**
+     * Default Pinterest board name. Present when Pinterest returned a name for the selected default board.
+     */
+    defaultBoardName?: string;
 };
 
 export type Pagination = {
@@ -1120,6 +1178,303 @@ export type DisconnectAccountResponses = {
 };
 
 export type DisconnectAccountResponse = DisconnectAccountResponses[keyof DisconnectAccountResponses];
+
+export type GetPinterestBoardsData = {
+    body?: never;
+    path: {
+        /**
+         * PostZen id of a connected Pinterest account.
+         */
+        accountId: string;
+    };
+    query?: never;
+    url: '/v1/accounts/{accountId}/pinterest-boards';
+};
+
+export type GetPinterestBoardsErrors = {
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * The Pinterest account is no longer connected.
+     */
+    424: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+    /**
+     * Pinterest could not answer the request.
+     */
+    502: ErrorResponse;
+};
+
+export type GetPinterestBoardsError = GetPinterestBoardsErrors[keyof GetPinterestBoardsErrors];
+
+export type GetPinterestBoardsResponses = {
+    /**
+     * Pinterest boards returned.
+     */
+    200: PinterestBoardsResponse;
+};
+
+export type GetPinterestBoardsResponse = GetPinterestBoardsResponses[keyof GetPinterestBoardsResponses];
+
+export type CreatePinterestBoardData = {
+    body: PinterestCreateBoardRequest;
+    path: {
+        /**
+         * PostZen id of a connected Pinterest account.
+         */
+        accountId: string;
+    };
+    query?: never;
+    url: '/v1/accounts/{accountId}/pinterest-boards';
+};
+
+export type CreatePinterestBoardErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * The Pinterest account is no longer connected.
+     */
+    424: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+    /**
+     * Pinterest could not create the board.
+     */
+    502: ErrorResponse;
+};
+
+export type CreatePinterestBoardError = CreatePinterestBoardErrors[keyof CreatePinterestBoardErrors];
+
+export type CreatePinterestBoardResponses = {
+    /**
+     * Pinterest board created.
+     */
+    201: PinterestBoardResponse;
+};
+
+export type CreatePinterestBoardResponse = CreatePinterestBoardResponses[keyof CreatePinterestBoardResponses];
+
+export type UpdatePinterestBoardsData = {
+    body: PinterestDefaultBoardRequest;
+    path: {
+        /**
+         * PostZen id of a connected Pinterest account.
+         */
+        accountId: string;
+    };
+    query?: never;
+    url: '/v1/accounts/{accountId}/pinterest-boards';
+};
+
+export type UpdatePinterestBoardsErrors = {
+    /**
+     * Invalid request or the selected board does not exist.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * The Pinterest account is no longer connected.
+     */
+    424: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+    /**
+     * Pinterest could not verify the board.
+     */
+    502: ErrorResponse;
+};
+
+export type UpdatePinterestBoardsError = UpdatePinterestBoardsErrors[keyof UpdatePinterestBoardsErrors];
+
+export type UpdatePinterestBoardsResponses = {
+    /**
+     * Default Pinterest board updated.
+     */
+    200: PinterestDefaultBoardResponse;
+};
+
+export type UpdatePinterestBoardsResponse = UpdatePinterestBoardsResponses[keyof UpdatePinterestBoardsResponses];
+
+export type ListPinterestBoardsForSelectionData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * State token returned by `GET /v1/connect/pinterest`.
+         */
+        state: string;
+    };
+    url: '/v1/connect/pinterest/select-board';
+};
+
+export type ListPinterestBoardsForSelectionErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * The connect session was not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Pinterest OAuth has not completed for this connect session.
+     */
+    409: ErrorResponse;
+    /**
+     * The connect session is too old for board selection.
+     */
+    410: ErrorResponse;
+    /**
+     * The connected Pinterest account is no longer available.
+     */
+    424: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+    /**
+     * Pinterest could not answer the request.
+     */
+    502: ErrorResponse;
+};
+
+export type ListPinterestBoardsForSelectionError = ListPinterestBoardsForSelectionErrors[keyof ListPinterestBoardsForSelectionErrors];
+
+export type ListPinterestBoardsForSelectionResponses = {
+    /**
+     * Pinterest boards returned for selection.
+     */
+    200: PinterestBoardsResponse;
+};
+
+export type ListPinterestBoardsForSelectionResponse = ListPinterestBoardsForSelectionResponses[keyof ListPinterestBoardsForSelectionResponses];
+
+export type SelectPinterestBoardData = {
+    body: PinterestSelectBoardRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/connect/pinterest/select-board';
+};
+
+export type SelectPinterestBoardErrors = {
+    /**
+     * Invalid request or the selected board does not exist.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * The connect session was not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Pinterest OAuth has not completed for this connect session.
+     */
+    409: ErrorResponse;
+    /**
+     * The connect session is too old for board selection.
+     */
+    410: ErrorResponse;
+    /**
+     * The connected Pinterest account is no longer available.
+     */
+    424: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+    /**
+     * Pinterest could not verify the board.
+     */
+    502: ErrorResponse;
+};
+
+export type SelectPinterestBoardError = SelectPinterestBoardErrors[keyof SelectPinterestBoardErrors];
+
+export type SelectPinterestBoardResponses = {
+    /**
+     * Pinterest board selected and stored as the account default.
+     */
+    200: PinterestSelectBoardResponse;
+};
+
+export type SelectPinterestBoardResponse = SelectPinterestBoardResponses[keyof SelectPinterestBoardResponses];
 
 export type CreateConnectUrlData = {
     body?: never;

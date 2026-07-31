@@ -40,14 +40,29 @@ describe('Endpoint Methods', () => {
   });
 
   describe('accounts', () => {
+    it('has createPinterestBoard', () => {
+      expect(client.accounts.createPinterestBoard).toBeDefined();
+      expect(client.accounts.createPinterestBoard).toBeTypeOf('function');
+    });
+
     it('has disconnectAccount', () => {
       expect(client.accounts.disconnectAccount).toBeDefined();
       expect(client.accounts.disconnectAccount).toBeTypeOf('function');
     });
 
+    it('has getPinterestBoards', () => {
+      expect(client.accounts.getPinterestBoards).toBeDefined();
+      expect(client.accounts.getPinterestBoards).toBeTypeOf('function');
+    });
+
     it('has listAccounts', () => {
       expect(client.accounts.listAccounts).toBeDefined();
       expect(client.accounts.listAccounts).toBeTypeOf('function');
+    });
+
+    it('has updatePinterestBoards', () => {
+      expect(client.accounts.updatePinterestBoards).toBeDefined();
+      expect(client.accounts.updatePinterestBoards).toBeTypeOf('function');
     });
 
   });
@@ -61,6 +76,16 @@ describe('Endpoint Methods', () => {
     it('has createConnectUrl', () => {
       expect(client.connect.createConnectUrl).toBeDefined();
       expect(client.connect.createConnectUrl).toBeTypeOf('function');
+    });
+
+    it('has listPinterestBoardsForSelection', () => {
+      expect(client.connect.listPinterestBoardsForSelection).toBeDefined();
+      expect(client.connect.listPinterestBoardsForSelection).toBeTypeOf('function');
+    });
+
+    it('has selectPinterestBoard', () => {
+      expect(client.connect.selectPinterestBoard).toBeDefined();
+      expect(client.connect.selectPinterestBoard).toBeTypeOf('function');
     });
 
   });

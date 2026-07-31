@@ -307,13 +307,18 @@ Error classes:
 | Method | Description |
 |--------|-------------|
 | `accounts.listAccounts()` | List accounts |
+| `accounts.createPinterestBoard()` | Create Pinterest board |
+| `accounts.getPinterestBoards()` | List Pinterest boards |
+| `accounts.updatePinterestBoards()` | Set default Pinterest board |
 | `accounts.disconnectAccount()` | Disconnect an account |
 
 ### Connect (OAuth)
 | Method | Description |
 |--------|-------------|
+| `connect.listPinterestBoardsForSelection()` | List Pinterest boards for the connect flow |
 | `connect.createConnectUrl()` | Create an OAuth connect URL |
 | `connect.completeConnect()` | Complete an OAuth connection |
+| `connect.selectPinterestBoard()` | Select Pinterest board |
 
 ### Media
 | Method | Description |
