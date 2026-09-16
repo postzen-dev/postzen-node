@@ -45,6 +45,7 @@ export type CommentAutomation = {
      */
     dmMessageVariations: Array<string>;
     buttons: Array<CommentAutomationButton>;
+    template?: CommentAutomationTemplate;
     /**
      * Optional public reply, sent only after successful comment DM. Ignored for story_reply.
      */
@@ -82,7 +83,7 @@ export type CommentAutomationButton = {
 };
 
 /**
- * Maximum 100 automations per user; at most one active per-post automation for each account and post reference. template, audience, followGate, alsoMatchInDms, clickTag and linkTracking:true return 400 unsupported. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
+ * Maximum 100 automations per user; at most one active per-post automation for each account and post reference. audience, followGate, alsoMatchInDms, clickTag and linkTracking:true return 400 unsupported. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons and image cards (template) fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
  */
 export type CommentAutomationCreateRequest = {
     /**
@@ -121,14 +122,18 @@ export type CommentAutomationCreateRequest = {
      */
     typoTolerance?: boolean;
     /**
-     * Plain text: at most 1000 UTF-8 bytes. With buttons: at most 640 characters.
+     * Required unless template is set. Plain text: at most 1000 UTF-8 bytes. With buttons: at most 640 characters. Ignored when a template is sent.
      */
-    dmMessage: string;
+    dmMessage?: string;
     /**
      * Same limits as dmMessage. Uniform random choice from the base message and variations.
      */
     dmMessageVariations?: Array<string>;
+    /**
+     * Mutually exclusive with template.
+     */
     buttons?: Array<CommentAutomationButton>;
+    template?: CommentAutomationTemplate;
     /**
      * Optional public reply, sent only after successful comment DM. Ignored for story_reply.
      */
@@ -189,7 +194,14 @@ export type CommentAutomationUpdateRequest = {
      * Same limits as dmMessage. Uniform random choice from the base message and variations.
      */
     dmMessageVariations?: Array<string>;
+    /**
+     * Mutually exclusive with template. Pass [] to clear.
+     */
     buttons?: Array<CommentAutomationButton>;
+    /**
+     * Send null to remove the card and go back to dmMessage.
+     */
+    template?: CommentAutomationTemplate | null;
     /**
      * Optional public reply, sent only after successful comment DM. Ignored for story_reply.
      */
@@ -2009,6 +2021,37 @@ export type QueuePreviewResponse = {
      */
     count: number;
     slots: Array<string>;
+};
+
+export type CommentAutomationTemplateElement = {
+    /**
+     * Card title. Trimmed.
+     */
+    title: string;
+    /**
+     * Optional line under the title.
+     */
+    subtitle?: string;
+    /**
+     * Public HTTPS image URL that Meta fetches. `POST /v1/media/presign` returns one that qualifies.
+     */
+    imageUrl: string;
+    /**
+     * Up to three link buttons under the card.
+     */
+    buttons?: Array<CommentAutomationButton>;
+};
+
+/**
+ * Meta generic template: an image card sent instead of dmMessage and buttons. If Meta rejects it for a send, PostZen resends the card's title, subtitle, image URL, and button links as plain text and marks the log buttonsDropped.
+ */
+export type CommentAutomationTemplate = {
+    type: 'generic';
+    imageAspectRatio?: 'horizontal' | 'square';
+    /**
+     * One card per element. Instagram renders several as a swipeable carousel.
+     */
+    elements: Array<CommentAutomationTemplateElement>;
 };
 
 export type ListProfilesData = {

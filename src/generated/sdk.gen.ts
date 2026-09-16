@@ -1003,7 +1003,7 @@ export const deleteApiKey = <ThrowOnError extends boolean = false>(options: Opti
 
 /**
  * List comment automations
- * Returns visible automations newest first, maximum 100. Reads use the plan per-minute limit. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
+ * Returns visible automations newest first, maximum 100. Reads use the plan per-minute limit. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons and image cards (template) fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
  */
 export const listCommentAutomations = <ThrowOnError extends boolean = false>(options?: Options<ListCommentAutomationsData, ThrowOnError>) => {
     return (options?.client ?? _heyApiClient).get<ListCommentAutomationsResponses, ListCommentAutomationsErrors, ThrowOnError>({
@@ -1020,7 +1020,7 @@ export const listCommentAutomations = <ThrowOnError extends boolean = false>(opt
 
 /**
  * Create a comment automation
- * Requires read_write. Limited to 60 creates per hour per user. Per-post automations take priority over account-wide automations. One matching automation wins, and each contact receives at most one pending or successful send per automation and source. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
+ * Requires read_write. Limited to 60 creates per hour per user. Per-post automations take priority over account-wide automations. One matching automation wins, and each contact receives at most one pending or successful send per automation and source. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons and image cards (template) fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
  */
 export const createCommentAutomation = <ThrowOnError extends boolean = false>(options: Options<CreateCommentAutomationData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).post<CreateCommentAutomationResponses, CreateCommentAutomationErrors, ThrowOnError>({
@@ -1041,7 +1041,7 @@ export const createCommentAutomation = <ThrowOnError extends boolean = false>(op
 
 /**
  * Delete a comment automation
- * Requires read_write. Limited to 60 deletes per hour per user. Deletes the automation and its logs in batches. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
+ * Requires read_write. Limited to 60 deletes per hour per user. Deletes the automation and its logs in batches. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons and image cards (template) fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
  */
 export const deleteCommentAutomation = <ThrowOnError extends boolean = false>(options: Options<DeleteCommentAutomationData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).delete<DeleteCommentAutomationResponses, DeleteCommentAutomationErrors, ThrowOnError>({
@@ -1058,7 +1058,7 @@ export const deleteCommentAutomation = <ThrowOnError extends boolean = false>(op
 
 /**
  * Get a comment automation
- * Returns the automation and 20 newest logs. Out-of-scope ids return 404 automationNotFound. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
+ * Returns the automation and 20 newest logs. Out-of-scope ids return 404 automationNotFound. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons and image cards (template) fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
  */
 export const getCommentAutomation = <ThrowOnError extends boolean = false>(options: Options<GetCommentAutomationData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).get<GetCommentAutomationResponses, GetCommentAutomationErrors, ThrowOnError>({
@@ -1075,7 +1075,7 @@ export const getCommentAutomation = <ThrowOnError extends boolean = false>(optio
 
 /**
  * Update a comment automation
- * Requires read_write. Limited to 120 updates per hour per user. Inactive automations are not evaluated; pending deliveries are skipped when disabled. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
+ * Requires read_write. Limited to 120 updates per hour per user. Inactive automations are not evaluated; pending deliveries are skipped when disabled. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons and image cards (template) fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
  */
 export const updateCommentAutomation = <ThrowOnError extends boolean = false>(options: Options<UpdateCommentAutomationData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).patch<UpdateCommentAutomationResponses, UpdateCommentAutomationErrors, ThrowOnError>({
@@ -1096,7 +1096,7 @@ export const updateCommentAutomation = <ThrowOnError extends boolean = false>(op
 
 /**
  * List comment automation logs
- * Newest logs first. total is capped at 5000 matching rows. Misses are not logged. Out-of-scope ids return 404 automationNotFound. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
+ * Newest logs first. total is capped at 5000 matching rows. Misses are not logged. Out-of-scope ids return 404 automationNotFound. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons and image cards (template) fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
  */
 export const listCommentAutomationLogs = <ThrowOnError extends boolean = false>(options: Options<ListCommentAutomationLogsData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).get<ListCommentAutomationLogsResponses, ListCommentAutomationLogsErrors, ThrowOnError>({
