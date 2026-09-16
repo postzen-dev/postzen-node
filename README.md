@@ -324,6 +324,7 @@ Error classes:
 | Method | Description |
 |--------|-------------|
 | `media.createMediaPresign()` | Create a presigned media upload URL |
+| `media.uploadMediaDirect()` | Upload a file directly |
 
 ### Posts
 | Method | Description |
@@ -332,6 +333,10 @@ Error classes:
 | `posts.listPostReactions()` | List reactions on a LinkedIn post |
 | `posts.listPosts()` | List posts |
 | `posts.createPost()` | Create a post |
+| `posts.getPost()` | Get a post |
+| `posts.updatePost()` | Update a post |
+| `posts.deletePost()` | Delete a post |
+| `posts.bulkUploadPosts()` | Bulk upload posts from CSV |
 
 ## Requirements
 

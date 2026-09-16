@@ -96,12 +96,32 @@ describe('Endpoint Methods', () => {
       expect(client.media.createMediaPresign).toBeTypeOf('function');
     });
 
+    it('has uploadMediaDirect', () => {
+      expect(client.media.uploadMediaDirect).toBeDefined();
+      expect(client.media.uploadMediaDirect).toBeTypeOf('function');
+    });
+
   });
 
   describe('posts', () => {
+    it('has bulkUploadPosts', () => {
+      expect(client.posts.bulkUploadPosts).toBeDefined();
+      expect(client.posts.bulkUploadPosts).toBeTypeOf('function');
+    });
+
     it('has createPost', () => {
       expect(client.posts.createPost).toBeDefined();
       expect(client.posts.createPost).toBeTypeOf('function');
+    });
+
+    it('has deletePost', () => {
+      expect(client.posts.deletePost).toBeDefined();
+      expect(client.posts.deletePost).toBeTypeOf('function');
+    });
+
+    it('has getPost', () => {
+      expect(client.posts.getPost).toBeDefined();
+      expect(client.posts.getPost).toBeTypeOf('function');
     });
 
     it('has listPostComments', () => {
@@ -117,6 +137,11 @@ describe('Endpoint Methods', () => {
     it('has listPosts', () => {
       expect(client.posts.listPosts).toBeDefined();
       expect(client.posts.listPosts).toBeTypeOf('function');
+    });
+
+    it('has updatePost', () => {
+      expect(client.posts.updatePost).toBeDefined();
+      expect(client.posts.updatePost).toBeTypeOf('function');
     });
 
   });
@@ -135,6 +160,178 @@ describe('Endpoint Methods', () => {
     it('has listApiKeys', () => {
       expect(client.apikeys.listApiKeys).toBeDefined();
       expect(client.apikeys.listApiKeys).toBeTypeOf('function');
+    });
+
+  });
+
+  describe('commentautomations', () => {
+    it('has createCommentAutomation', () => {
+      expect(client.commentautomations.createCommentAutomation).toBeDefined();
+      expect(client.commentautomations.createCommentAutomation).toBeTypeOf('function');
+    });
+
+    it('has deleteCommentAutomation', () => {
+      expect(client.commentautomations.deleteCommentAutomation).toBeDefined();
+      expect(client.commentautomations.deleteCommentAutomation).toBeTypeOf('function');
+    });
+
+    it('has getCommentAutomation', () => {
+      expect(client.commentautomations.getCommentAutomation).toBeDefined();
+      expect(client.commentautomations.getCommentAutomation).toBeTypeOf('function');
+    });
+
+    it('has listCommentAutomationLogs', () => {
+      expect(client.commentautomations.listCommentAutomationLogs).toBeDefined();
+      expect(client.commentautomations.listCommentAutomationLogs).toBeTypeOf('function');
+    });
+
+    it('has listCommentAutomations', () => {
+      expect(client.commentautomations.listCommentAutomations).toBeDefined();
+      expect(client.commentautomations.listCommentAutomations).toBeTypeOf('function');
+    });
+
+    it('has updateCommentAutomation', () => {
+      expect(client.commentautomations.updateCommentAutomation).toBeDefined();
+      expect(client.commentautomations.updateCommentAutomation).toBeTypeOf('function');
+    });
+
+  });
+
+  describe('queues', () => {
+    it('has createQueueSlot', () => {
+      expect(client.queues.createQueueSlot).toBeDefined();
+      expect(client.queues.createQueueSlot).toBeTypeOf('function');
+    });
+
+    it('has deleteQueueSlot', () => {
+      expect(client.queues.deleteQueueSlot).toBeDefined();
+      expect(client.queues.deleteQueueSlot).toBeTypeOf('function');
+    });
+
+    it('has getNextQueueSlot', () => {
+      expect(client.queues.getNextQueueSlot).toBeDefined();
+      expect(client.queues.getNextQueueSlot).toBeTypeOf('function');
+    });
+
+    it('has listQueueSlots', () => {
+      expect(client.queues.listQueueSlots).toBeDefined();
+      expect(client.queues.listQueueSlots).toBeTypeOf('function');
+    });
+
+    it('has previewQueue', () => {
+      expect(client.queues.previewQueue).toBeDefined();
+      expect(client.queues.previewQueue).toBeTypeOf('function');
+    });
+
+    it('has updateQueueSlot', () => {
+      expect(client.queues.updateQueueSlot).toBeDefined();
+      expect(client.queues.updateQueueSlot).toBeTypeOf('function');
+    });
+
+  });
+
+  describe('webhooks', () => {
+    it('has createWebhook', () => {
+      expect(client.webhooks.createWebhook).toBeDefined();
+      expect(client.webhooks.createWebhook).toBeTypeOf('function');
+    });
+
+    it('has deleteWebhook', () => {
+      expect(client.webhooks.deleteWebhook).toBeDefined();
+      expect(client.webhooks.deleteWebhook).toBeTypeOf('function');
+    });
+
+    it('has getWebhook', () => {
+      expect(client.webhooks.getWebhook).toBeDefined();
+      expect(client.webhooks.getWebhook).toBeTypeOf('function');
+    });
+
+    it('has listWebhookDeliveries', () => {
+      expect(client.webhooks.listWebhookDeliveries).toBeDefined();
+      expect(client.webhooks.listWebhookDeliveries).toBeTypeOf('function');
+    });
+
+    it('has listWebhooks', () => {
+      expect(client.webhooks.listWebhooks).toBeDefined();
+      expect(client.webhooks.listWebhooks).toBeTypeOf('function');
+    });
+
+    it('has redeliverWebhookDelivery', () => {
+      expect(client.webhooks.redeliverWebhookDelivery).toBeDefined();
+      expect(client.webhooks.redeliverWebhookDelivery).toBeTypeOf('function');
+    });
+
+    it('has testWebhook', () => {
+      expect(client.webhooks.testWebhook).toBeDefined();
+      expect(client.webhooks.testWebhook).toBeTypeOf('function');
+    });
+
+    it('has updateWebhook', () => {
+      expect(client.webhooks.updateWebhook).toBeDefined();
+      expect(client.webhooks.updateWebhook).toBeTypeOf('function');
+    });
+
+  });
+
+  describe('inbox', () => {
+    it('has deleteInboxComment', () => {
+      expect(client.inbox.deleteInboxComment).toBeDefined();
+      expect(client.inbox.deleteInboxComment).toBeTypeOf('function');
+    });
+
+    it('has getInboxConversation', () => {
+      expect(client.inbox.getInboxConversation).toBeDefined();
+      expect(client.inbox.getInboxConversation).toBeTypeOf('function');
+    });
+
+    it('has hideInboxComment', () => {
+      expect(client.inbox.hideInboxComment).toBeDefined();
+      expect(client.inbox.hideInboxComment).toBeTypeOf('function');
+    });
+
+    it('has listInboxConversationMessages', () => {
+      expect(client.inbox.listInboxConversationMessages).toBeDefined();
+      expect(client.inbox.listInboxConversationMessages).toBeTypeOf('function');
+    });
+
+    it('has listInboxConversations', () => {
+      expect(client.inbox.listInboxConversations).toBeDefined();
+      expect(client.inbox.listInboxConversations).toBeTypeOf('function');
+    });
+
+    it('has listInboxPostComments', () => {
+      expect(client.inbox.listInboxPostComments).toBeDefined();
+      expect(client.inbox.listInboxPostComments).toBeTypeOf('function');
+    });
+
+    it('has markInboxConversationRead', () => {
+      expect(client.inbox.markInboxConversationRead).toBeDefined();
+      expect(client.inbox.markInboxConversationRead).toBeTypeOf('function');
+    });
+
+    it('has replyToInboxPost', () => {
+      expect(client.inbox.replyToInboxPost).toBeDefined();
+      expect(client.inbox.replyToInboxPost).toBeTypeOf('function');
+    });
+
+    it('has searchInboxConversations', () => {
+      expect(client.inbox.searchInboxConversations).toBeDefined();
+      expect(client.inbox.searchInboxConversations).toBeTypeOf('function');
+    });
+
+    it('has sendInboxMessage', () => {
+      expect(client.inbox.sendInboxMessage).toBeDefined();
+      expect(client.inbox.sendInboxMessage).toBeTypeOf('function');
+    });
+
+    it('has unhideInboxComment', () => {
+      expect(client.inbox.unhideInboxComment).toBeDefined();
+      expect(client.inbox.unhideInboxComment).toBeTypeOf('function');
+    });
+
+    it('has updateInboxConversation', () => {
+      expect(client.inbox.updateInboxConversation).toBeDefined();
+      expect(client.inbox.updateInboxConversation).toBeTypeOf('function');
     });
 
   });

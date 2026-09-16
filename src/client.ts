@@ -6,34 +6,71 @@
 import packageJson from '../package.json';
 import { createClient, createConfig, type Client } from './generated/client';
 import {
+  bulkUploadPosts,
   completeConnect,
   createApiKey,
+  createCommentAutomation,
   createConnectUrl,
   createMediaPresign,
   createPinterestBoard,
   createPost,
   createProfile,
+  createQueueSlot,
+  createWebhook,
   deleteApiKey,
+  deleteCommentAutomation,
+  deleteInboxComment,
+  deletePost,
   deleteProfile,
+  deleteQueueSlot,
+  deleteWebhook,
   disconnectAccount,
   getAnalytics,
   getBestTimeToPost,
+  getCommentAutomation,
   getDailyMetrics,
   getFollowerStats,
+  getInboxConversation,
+  getNextQueueSlot,
   getPinterestBoards,
+  getPost,
   getPostTimeline,
   getProfile,
+  getWebhook,
+  hideInboxComment,
   listAccounts,
   listApiKeys,
+  listCommentAutomationLogs,
+  listCommentAutomations,
+  listInboxConversationMessages,
+  listInboxConversations,
+  listInboxPostComments,
   listPinterestBoardsForSelection,
   listPostComments,
   listPostReactions,
   listPosts,
   listProfiles,
+  listQueueSlots,
+  listWebhookDeliveries,
+  listWebhooks,
+  markInboxConversationRead,
+  previewQueue,
+  redeliverWebhookDelivery,
+  replyToInboxPost,
+  searchInboxConversations,
   selectPinterestBoard,
+  sendInboxMessage,
   syncExternalPosts,
+  testWebhook,
+  unhideInboxComment,
+  updateCommentAutomation,
+  updateInboxConversation,
   updatePinterestBoards,
+  updatePost,
   updateProfile,
+  updateQueueSlot,
+  updateWebhook,
+  uploadMediaDirect,
 } from './generated/sdk.gen';
 import { PostZenApiError, parseApiError } from './errors';
 import {
@@ -233,6 +270,7 @@ export class PostZen {
    */
   media = {
     createMediaPresign: ((options?: Parameters<typeof createMediaPresign>[0]) => createMediaPresign(this._withRequestOptions(options) as Parameters<typeof createMediaPresign>[0])) as typeof createMediaPresign,
+    uploadMediaDirect: ((options?: Parameters<typeof uploadMediaDirect>[0]) => uploadMediaDirect(this._withRequestOptions(options) as Parameters<typeof uploadMediaDirect>[0])) as typeof uploadMediaDirect,
     /**
      * Upload media in one step: presign, PUT the raw bytes to the returned
      * `uploadUrl`, and resolve with the public URL and metadata.
@@ -251,10 +289,14 @@ export class PostZen {
    * Posts API - Create, schedule, and publish posts
    */
   posts = {
+    bulkUploadPosts: ((options?: Parameters<typeof bulkUploadPosts>[0]) => bulkUploadPosts(this._withRequestOptions(options) as Parameters<typeof bulkUploadPosts>[0])) as typeof bulkUploadPosts,
     createPost: ((options?: Parameters<typeof createPost>[0]) => createPost(this._withRequestOptions(options) as Parameters<typeof createPost>[0])) as typeof createPost,
+    deletePost: ((options?: Parameters<typeof deletePost>[0]) => deletePost(this._withRequestOptions(options) as Parameters<typeof deletePost>[0])) as typeof deletePost,
+    getPost: ((options?: Parameters<typeof getPost>[0]) => getPost(this._withRequestOptions(options) as Parameters<typeof getPost>[0])) as typeof getPost,
     listPostComments: ((options?: Parameters<typeof listPostComments>[0]) => listPostComments(this._withRequestOptions(options) as Parameters<typeof listPostComments>[0])) as typeof listPostComments,
     listPostReactions: ((options?: Parameters<typeof listPostReactions>[0]) => listPostReactions(this._withRequestOptions(options) as Parameters<typeof listPostReactions>[0])) as typeof listPostReactions,
     listPosts: ((options?: Parameters<typeof listPosts>[0]) => listPosts(this._withRequestOptions(options) as Parameters<typeof listPosts>[0])) as typeof listPosts,
+    updatePost: ((options?: Parameters<typeof updatePost>[0]) => updatePost(this._withRequestOptions(options) as Parameters<typeof updatePost>[0])) as typeof updatePost,
   };
 
   /**
@@ -264,6 +306,62 @@ export class PostZen {
     createApiKey: ((options?: Parameters<typeof createApiKey>[0]) => createApiKey(this._withRequestOptions(options) as Parameters<typeof createApiKey>[0])) as typeof createApiKey,
     deleteApiKey: ((options?: Parameters<typeof deleteApiKey>[0]) => deleteApiKey(this._withRequestOptions(options) as Parameters<typeof deleteApiKey>[0])) as typeof deleteApiKey,
     listApiKeys: ((options?: Parameters<typeof listApiKeys>[0]) => listApiKeys(this._withRequestOptions(options) as Parameters<typeof listApiKeys>[0])) as typeof listApiKeys,
+  };
+
+  /**
+   * commentautomations API
+   */
+  commentautomations = {
+    createCommentAutomation: ((options?: Parameters<typeof createCommentAutomation>[0]) => createCommentAutomation(this._withRequestOptions(options) as Parameters<typeof createCommentAutomation>[0])) as typeof createCommentAutomation,
+    deleteCommentAutomation: ((options?: Parameters<typeof deleteCommentAutomation>[0]) => deleteCommentAutomation(this._withRequestOptions(options) as Parameters<typeof deleteCommentAutomation>[0])) as typeof deleteCommentAutomation,
+    getCommentAutomation: ((options?: Parameters<typeof getCommentAutomation>[0]) => getCommentAutomation(this._withRequestOptions(options) as Parameters<typeof getCommentAutomation>[0])) as typeof getCommentAutomation,
+    listCommentAutomationLogs: ((options?: Parameters<typeof listCommentAutomationLogs>[0]) => listCommentAutomationLogs(this._withRequestOptions(options) as Parameters<typeof listCommentAutomationLogs>[0])) as typeof listCommentAutomationLogs,
+    listCommentAutomations: ((options?: Parameters<typeof listCommentAutomations>[0]) => listCommentAutomations(this._withRequestOptions(options) as Parameters<typeof listCommentAutomations>[0])) as typeof listCommentAutomations,
+    updateCommentAutomation: ((options?: Parameters<typeof updateCommentAutomation>[0]) => updateCommentAutomation(this._withRequestOptions(options) as Parameters<typeof updateCommentAutomation>[0])) as typeof updateCommentAutomation,
+  };
+
+  /**
+   * queues API
+   */
+  queues = {
+    createQueueSlot: ((options?: Parameters<typeof createQueueSlot>[0]) => createQueueSlot(this._withRequestOptions(options) as Parameters<typeof createQueueSlot>[0])) as typeof createQueueSlot,
+    deleteQueueSlot: ((options?: Parameters<typeof deleteQueueSlot>[0]) => deleteQueueSlot(this._withRequestOptions(options) as Parameters<typeof deleteQueueSlot>[0])) as typeof deleteQueueSlot,
+    getNextQueueSlot: ((options?: Parameters<typeof getNextQueueSlot>[0]) => getNextQueueSlot(this._withRequestOptions(options) as Parameters<typeof getNextQueueSlot>[0])) as typeof getNextQueueSlot,
+    listQueueSlots: ((options?: Parameters<typeof listQueueSlots>[0]) => listQueueSlots(this._withRequestOptions(options) as Parameters<typeof listQueueSlots>[0])) as typeof listQueueSlots,
+    previewQueue: ((options?: Parameters<typeof previewQueue>[0]) => previewQueue(this._withRequestOptions(options) as Parameters<typeof previewQueue>[0])) as typeof previewQueue,
+    updateQueueSlot: ((options?: Parameters<typeof updateQueueSlot>[0]) => updateQueueSlot(this._withRequestOptions(options) as Parameters<typeof updateQueueSlot>[0])) as typeof updateQueueSlot,
+  };
+
+  /**
+   * webhooks API
+   */
+  webhooks = {
+    createWebhook: ((options?: Parameters<typeof createWebhook>[0]) => createWebhook(this._withRequestOptions(options) as Parameters<typeof createWebhook>[0])) as typeof createWebhook,
+    deleteWebhook: ((options?: Parameters<typeof deleteWebhook>[0]) => deleteWebhook(this._withRequestOptions(options) as Parameters<typeof deleteWebhook>[0])) as typeof deleteWebhook,
+    getWebhook: ((options?: Parameters<typeof getWebhook>[0]) => getWebhook(this._withRequestOptions(options) as Parameters<typeof getWebhook>[0])) as typeof getWebhook,
+    listWebhookDeliveries: ((options?: Parameters<typeof listWebhookDeliveries>[0]) => listWebhookDeliveries(this._withRequestOptions(options) as Parameters<typeof listWebhookDeliveries>[0])) as typeof listWebhookDeliveries,
+    listWebhooks: ((options?: Parameters<typeof listWebhooks>[0]) => listWebhooks(this._withRequestOptions(options) as Parameters<typeof listWebhooks>[0])) as typeof listWebhooks,
+    redeliverWebhookDelivery: ((options?: Parameters<typeof redeliverWebhookDelivery>[0]) => redeliverWebhookDelivery(this._withRequestOptions(options) as Parameters<typeof redeliverWebhookDelivery>[0])) as typeof redeliverWebhookDelivery,
+    testWebhook: ((options?: Parameters<typeof testWebhook>[0]) => testWebhook(this._withRequestOptions(options) as Parameters<typeof testWebhook>[0])) as typeof testWebhook,
+    updateWebhook: ((options?: Parameters<typeof updateWebhook>[0]) => updateWebhook(this._withRequestOptions(options) as Parameters<typeof updateWebhook>[0])) as typeof updateWebhook,
+  };
+
+  /**
+   * inbox API
+   */
+  inbox = {
+    deleteInboxComment: ((options?: Parameters<typeof deleteInboxComment>[0]) => deleteInboxComment(this._withRequestOptions(options) as Parameters<typeof deleteInboxComment>[0])) as typeof deleteInboxComment,
+    getInboxConversation: ((options?: Parameters<typeof getInboxConversation>[0]) => getInboxConversation(this._withRequestOptions(options) as Parameters<typeof getInboxConversation>[0])) as typeof getInboxConversation,
+    hideInboxComment: ((options?: Parameters<typeof hideInboxComment>[0]) => hideInboxComment(this._withRequestOptions(options) as Parameters<typeof hideInboxComment>[0])) as typeof hideInboxComment,
+    listInboxConversationMessages: ((options?: Parameters<typeof listInboxConversationMessages>[0]) => listInboxConversationMessages(this._withRequestOptions(options) as Parameters<typeof listInboxConversationMessages>[0])) as typeof listInboxConversationMessages,
+    listInboxConversations: ((options?: Parameters<typeof listInboxConversations>[0]) => listInboxConversations(this._withRequestOptions(options) as Parameters<typeof listInboxConversations>[0])) as typeof listInboxConversations,
+    listInboxPostComments: ((options?: Parameters<typeof listInboxPostComments>[0]) => listInboxPostComments(this._withRequestOptions(options) as Parameters<typeof listInboxPostComments>[0])) as typeof listInboxPostComments,
+    markInboxConversationRead: ((options?: Parameters<typeof markInboxConversationRead>[0]) => markInboxConversationRead(this._withRequestOptions(options) as Parameters<typeof markInboxConversationRead>[0])) as typeof markInboxConversationRead,
+    replyToInboxPost: ((options?: Parameters<typeof replyToInboxPost>[0]) => replyToInboxPost(this._withRequestOptions(options) as Parameters<typeof replyToInboxPost>[0])) as typeof replyToInboxPost,
+    searchInboxConversations: ((options?: Parameters<typeof searchInboxConversations>[0]) => searchInboxConversations(this._withRequestOptions(options) as Parameters<typeof searchInboxConversations>[0])) as typeof searchInboxConversations,
+    sendInboxMessage: ((options?: Parameters<typeof sendInboxMessage>[0]) => sendInboxMessage(this._withRequestOptions(options) as Parameters<typeof sendInboxMessage>[0])) as typeof sendInboxMessage,
+    unhideInboxComment: ((options?: Parameters<typeof unhideInboxComment>[0]) => unhideInboxComment(this._withRequestOptions(options) as Parameters<typeof unhideInboxComment>[0])) as typeof unhideInboxComment,
+    updateInboxConversation: ((options?: Parameters<typeof updateInboxConversation>[0]) => updateInboxConversation(this._withRequestOptions(options) as Parameters<typeof updateInboxConversation>[0])) as typeof updateInboxConversation,
   };
 
   /**
