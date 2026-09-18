@@ -71,6 +71,8 @@ export type CommentAutomation = {
     };
     createdAt: string;
     updatedAt: string;
+    audience: CommentAutomationAudience;
+    followGate?: CommentAutomationFollowGate;
 };
 
 export type CommentAutomationButton = {
@@ -83,7 +85,7 @@ export type CommentAutomationButton = {
 };
 
 /**
- * Maximum 100 automations per user; at most one active per-post automation for each account and post reference. audience, followGate, alsoMatchInDms, clickTag and linkTracking:true return 400 unsupported. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons and image cards (template) fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
+ * Maximum 100 automations per user; at most one active per-post automation for each account and post reference. alsoMatchInDms, clickTag and linkTracking:true return 400 unsupported. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons and image cards (template) fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
  */
 export type CommentAutomationCreateRequest = {
     /**
@@ -149,6 +151,8 @@ export type CommentAutomationCreateRequest = {
     commentReplyDelaySeconds?: number;
     isActive?: boolean;
     linkTracking?: false;
+    audience?: CommentAutomationAudience;
+    followGate?: CommentAutomationFollowGate;
 };
 
 /**
@@ -217,6 +221,8 @@ export type CommentAutomationUpdateRequest = {
     commentReplyDelaySeconds?: number;
     isActive?: boolean;
     linkTracking?: false;
+    audience?: CommentAutomationAudience;
+    followGate?: CommentAutomationFollowGate;
 };
 
 export type CommentAutomationLog = {
@@ -226,17 +232,37 @@ export type CommentAutomationLog = {
     commenterId: string;
     commenterName?: string;
     commentText?: string;
-    skipReason?: string;
+    skipReason?: 'already_sent_to_contact' | 'automation_inactive' | 'not_follower' | 'is_follower' | 'below_min_followers' | 'follow_status_unknown';
     error?: string;
     sentMessageId?: string;
     commentReplyError?: string;
     source: 'comment' | 'story_reply';
-    status: 'pending' | 'sent' | 'failed' | 'skipped';
+    /**
+     * gated: the follow-gate confirmation DM went out and we are waiting for the tap; it flips to sent or skipped when they tap. An unsuccessful audience check keeps the gate open for another tap.
+     */
+    status: 'pending' | 'sent' | 'failed' | 'skipped' | 'gated';
     buttonsDropped?: boolean;
     commentReplyStatus?: 'pending' | 'sent' | 'failed' | 'skipped';
     nextDueAt?: string;
     createdAt: string;
     updatedAt: string;
+    gateMessageId?: string;
+    commenterIgsid?: string;
+    /**
+     * Unix timestamp in milliseconds.
+     */
+    gateSentAt?: number;
+    /**
+     * Unix timestamp in milliseconds.
+     */
+    gateTappedAt?: number;
+    gateAttempts?: number;
+    followerCount?: number;
+    followStatus?: 'follower' | 'non_follower' | 'unknown';
+    /**
+     * Meta rejected the postback template and delivery failed open.
+     */
+    gateDropped?: boolean;
 };
 
 export type CommentAutomationListResponse = {
@@ -2052,6 +2078,33 @@ export type CommentAutomationTemplate = {
      * One card per element. Instagram renders several as a swipeable carousel.
      */
     elements: Array<CommentAutomationTemplateElement>;
+};
+
+/**
+ * Who a comment automation answers. Instagram only - Meta exposes the follow relationship on no other platform, and only for people who have MESSAGED the account (a comment grants no consent). `whenUnknown` is therefore the important setting: it decides what happens for a first-time commenter.
+ */
+export type CommentAutomationAudience = {
+    followerStatus?: 'any' | 'follower' | 'non_follower';
+    /**
+     * Omit for no size rule. Zero is stored as absent.
+     */
+    minFollowerCount?: number;
+    /**
+     * What to do when Instagram will not reveal the follow relationship. `send` (default) - deliver the DM anyway (fails open). `skip` - stay silent. `verify` - send `followGate.message` with a confirm button. Tapping it is a message, which grants consent, so the re-check on the tap resolves and the real DM (or `followGate.notFollowingMessage`) follows automatically.
+     */
+    whenUnknown?: 'send' | 'skip' | 'verify';
+};
+
+/**
+ * Copy for the follow gate. Sensible defaults are used for any field left empty.
+ */
+export type CommentAutomationFollowGate = {
+    message?: string;
+    buttonLabel?: string;
+    /**
+     * Sent to a commenter we know does not follow (followerStatus=follower). Omit to stay silent on a keyword comment; a confirm tap always gets an answer.
+     */
+    notFollowingMessage?: string;
 };
 
 export type ListProfilesData = {
@@ -5255,7 +5308,7 @@ export type ListCommentAutomationLogsData = {
         automationId: string;
     };
     query?: {
-        status?: 'pending' | 'sent' | 'failed' | 'skipped';
+        status?: 'pending' | 'sent' | 'failed' | 'skipped' | 'gated';
         limit?: number;
         skip?: number;
     };
