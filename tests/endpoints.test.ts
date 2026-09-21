@@ -146,6 +146,44 @@ describe('Endpoint Methods', () => {
 
   });
 
+  describe('contacts', () => {
+    it('has bulkCreateContacts', () => {
+      expect(client.contacts.bulkCreateContacts).toBeDefined();
+      expect(client.contacts.bulkCreateContacts).toBeTypeOf('function');
+    });
+
+    it('has createContact', () => {
+      expect(client.contacts.createContact).toBeDefined();
+      expect(client.contacts.createContact).toBeTypeOf('function');
+    });
+
+    it('has deleteContact', () => {
+      expect(client.contacts.deleteContact).toBeDefined();
+      expect(client.contacts.deleteContact).toBeTypeOf('function');
+    });
+
+    it('has getContact', () => {
+      expect(client.contacts.getContact).toBeDefined();
+      expect(client.contacts.getContact).toBeTypeOf('function');
+    });
+
+    it('has getContactChannels', () => {
+      expect(client.contacts.getContactChannels).toBeDefined();
+      expect(client.contacts.getContactChannels).toBeTypeOf('function');
+    });
+
+    it('has listContacts', () => {
+      expect(client.contacts.listContacts).toBeDefined();
+      expect(client.contacts.listContacts).toBeTypeOf('function');
+    });
+
+    it('has updateContact', () => {
+      expect(client.contacts.updateContact).toBeDefined();
+      expect(client.contacts.updateContact).toBeTypeOf('function');
+    });
+
+  });
+
   describe('apikeys', () => {
     it('has createApiKey', () => {
       expect(client.apikeys.createApiKey).toBeDefined();

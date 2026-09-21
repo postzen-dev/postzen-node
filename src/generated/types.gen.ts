@@ -232,7 +232,7 @@ export type CommentAutomationLog = {
     commenterId: string;
     commenterName?: string;
     commentText?: string;
-    skipReason?: 'already_sent_to_contact' | 'automation_inactive' | 'not_follower' | 'is_follower' | 'below_min_followers' | 'follow_status_unknown';
+    skipReason?: 'already_sent_to_contact' | 'automation_inactive' | 'not_follower' | 'is_follower' | 'below_min_followers' | 'follow_status_unknown' | 'contact_blocked' | 'contact_unsubscribed';
     error?: string;
     sentMessageId?: string;
     commentReplyError?: string;
@@ -2105,6 +2105,349 @@ export type CommentAutomationFollowGate = {
      * Sent to a commenter we know does not follow (followerStatus=follower). Omit to stay silent on a keyword comment; a confirm tap always gets an answer.
      */
     notFollowingMessage?: string;
+};
+
+/**
+ * A profile-owned person. Maximum 5000 contacts per user and 20 channels per contact. Absent optional fields are returned as null. Message history is not backfilled.
+ */
+export type Contact = {
+    /**
+     * Contact id.
+     */
+    id: string;
+    /**
+     * Owning profile id; immutable and must be in the API key scope.
+     */
+    profileId: string;
+    /**
+     * Trimmed contact name, 1–200 characters.
+     */
+    name: string;
+    /**
+     * Trimmed lowercase email; unique within its profile.
+     */
+    email: string | null;
+    /**
+     * Company name, at most 200 characters.
+     */
+    company: string | null;
+    /**
+     * Public HTTPS avatar URL, canonicalized on PATCH; inbox avatars are stored as supplied by the platform.
+     */
+    avatarUrl: string | null;
+    /**
+     * At most 50 tags, trimmed and deduplicated case-insensitively, preserving original case. Send [] to clear.
+     */
+    tags: Array<string>;
+    /**
+     * Contact subscription state. False prevents comment automation sends.
+     */
+    isSubscribed: boolean;
+    /**
+     * Blocked contacts cannot receive comment automation sends.
+     */
+    isBlocked: boolean;
+    /**
+     * Free-form notes, at most 5000 characters.
+     */
+    notes: string | null;
+    /**
+     * At most 50 keys of 1–64 characters. Keys follow Convex record rules: printable ASCII, not starting with $ or _. Values are strings (at most 1000 characters), finite numbers, booleans, or null. PATCH replaces the entire object.
+     */
+    customFields: {
+        [key: string]: string | number | boolean | null;
+    } | null;
+    /**
+     * Messages sent by the connected account, including automation DMs. Counters start when Contacts ships; history is not backfilled.
+     */
+    messagesSentCount: number;
+    /**
+     * Messages received from this person since Contacts ships; re-syncing stored messages does not increment this count.
+     */
+    messagesReceivedCount: number;
+    /**
+     * Latest counted outbound message time, or null.
+     */
+    lastMessageSentAt: string | null;
+    /**
+     * Latest counted inbound message time, or null.
+     */
+    lastMessageReceivedAt: string | null;
+    /**
+     * How this contact first came to exist; informational and immutable.
+     */
+    source: 'api' | 'inbox' | 'automation';
+    /**
+     * Contact creation time.
+     */
+    createdAt: string;
+    /**
+     * Latest contact update time.
+     */
+    updatedAt: string;
+};
+
+/**
+ * Contact with its oldest channel identity and channel count.
+ */
+export type ContactListItem = Contact & {
+    /**
+     * Primary (oldest by createdAt) channel: PostZen platform. Always resolved from the connected account. Null when no channel exists.
+     */
+    platform: 'x' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest' | 'bluesky' | 'telegram';
+    /**
+     * Primary (oldest by createdAt) channel: Platform identity (IGSID, PSID, or handle), trimmed, 1–200 characters. Unique per connected account. Null when no channel exists.
+     */
+    platformIdentifier: string | null;
+    /**
+     * Primary (oldest by createdAt) channel: Optional username or friendly handle, at most 200 characters. Null when no channel exists.
+     */
+    displayIdentifier: string | null;
+    /**
+     * Number of channels belonging to this contact.
+     */
+    channelCount: number;
+};
+
+/**
+ * One platform identity on one connected account. At most 20 channels per contact; optional fields are present as null.
+ */
+export type ContactChannel = {
+    /**
+     * Contact channel id.
+     */
+    id: string;
+    /**
+     * Contact owning this channel.
+     */
+    contactId: string;
+    /**
+     * Connected account id; must belong to the same profile and caller.
+     */
+    accountId: string;
+    /**
+     * PostZen platform. Always resolved from the connected account.
+     */
+    platform: 'x' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest' | 'bluesky' | 'telegram';
+    /**
+     * Platform identity (IGSID, PSID, or handle), trimmed, 1–200 characters. Unique per connected account.
+     */
+    platformIdentifier: string;
+    /**
+     * Optional username or friendly handle, at most 200 characters.
+     */
+    displayIdentifier: string | null;
+    /**
+     * Channel opt-in. False prevents comment automation sends on this channel.
+     */
+    isSubscribed: boolean;
+    /**
+     * Platform conversation id when known; not the PostZen inbox document id.
+     */
+    conversationId: string | null;
+    /**
+     * Optional platform facts; same key and scalar value limits as customFields.
+     */
+    metadata: {
+        [key: string]: string | number | boolean | null;
+    } | null;
+    /**
+     * Latest counted message time on this channel.
+     */
+    lastActiveAt: string | null;
+    /**
+     * Channel creation time.
+     */
+    createdAt: string;
+};
+
+/**
+ * Creates a contact and optionally its first channel. If accountId, platformIdentifier, or platform is supplied, both accountId and platformIdentifier are required. Maximum 5000 contacts per user, 20 channels per contact. Duplicate email within the profile or duplicate channel returns 409.
+ */
+export type ContactCreateRequest = {
+    /**
+     * Owning profile id; immutable and must be in the API key scope.
+     */
+    profileId: string;
+    /**
+     * Trimmed contact name, 1–200 characters.
+     */
+    name: string;
+    /**
+     * Trimmed lowercase email; unique within its profile.
+     */
+    email?: string;
+    /**
+     * Company name, at most 200 characters.
+     */
+    company?: string;
+    /**
+     * At most 50 tags, trimmed and deduplicated case-insensitively, preserving original case. Send [] to clear.
+     */
+    tags?: Array<string>;
+    /**
+     * Contact subscription state. False prevents comment automation sends.
+     */
+    isSubscribed?: boolean;
+    /**
+     * Free-form notes, at most 5000 characters.
+     */
+    notes?: string;
+    /**
+     * At most 50 keys of 1–64 characters. Keys follow Convex record rules: printable ASCII, not starting with $ or _. Values are strings (at most 1000 characters), finite numbers, booleans, or null. PATCH replaces the entire object.
+     */
+    customFields?: {
+        [key: string]: string | number | boolean | null;
+    };
+    /**
+     * Connected account id; must belong to the same profile and caller.
+     */
+    accountId?: string;
+    /**
+     * Platform identity (IGSID, PSID, or handle), trimmed, 1–200 characters. Unique per connected account.
+     */
+    platformIdentifier?: string;
+    /**
+     * Optional username or friendly handle, at most 200 characters. Without a channel it is ignored and a warning is returned.
+     */
+    displayIdentifier?: string;
+    /**
+     * Optional assertion of the account platform. Must equal account.platform; requires accountId and platformIdentifier.
+     */
+    platform?: 'x' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest' | 'bluesky' | 'telegram';
+};
+
+/**
+ * Partial update. profileId cannot be changed; channel fields and unknown keys are rejected with 400 validation. Tags replace the array and customFields replaces the whole object.
+ */
+export type ContactUpdateRequest = {
+    /**
+     * Trimmed contact name, 1–200 characters.
+     */
+    name?: string;
+    /**
+     * Trimmed lowercase email; unique within its profile. Send null to clear.
+     */
+    email?: string | null;
+    /**
+     * Company name, at most 200 characters. Send null to clear.
+     */
+    company?: string | null;
+    /**
+     * Public HTTPS avatar URL, canonicalized on PATCH; inbox avatars are stored as supplied by the platform. Send null to clear.
+     */
+    avatarUrl?: string | null;
+    /**
+     * At most 50 tags, trimmed and deduplicated case-insensitively, preserving original case. Send [] to clear.
+     */
+    tags?: Array<string>;
+    /**
+     * Contact subscription state. False prevents comment automation sends.
+     */
+    isSubscribed?: boolean;
+    /**
+     * Blocked contacts cannot receive comment automation sends.
+     */
+    isBlocked?: boolean;
+    /**
+     * Free-form notes, at most 5000 characters. Send null to clear.
+     */
+    notes?: string | null;
+    /**
+     * At most 50 keys of 1–64 characters. Keys follow Convex record rules: printable ASCII, not starting with $ or _. Values are strings (at most 1000 characters), finite numbers, booleans, or null. PATCH replaces the entire object. Send null to clear.
+     */
+    customFields?: {
+        [key: string]: string | number | boolean | null;
+    } | null;
+};
+
+/**
+ * One import row. Invalid rows are reported with a 1-based row number and do not prevent other rows from importing. No channel is added for duplicates.
+ */
+export type ContactBulkCreateRow = {
+    /**
+     * Trimmed contact name, 1–200 characters.
+     */
+    name: string;
+    /**
+     * Trimmed lowercase email; unique within its profile.
+     */
+    email?: string;
+    /**
+     * Company name, at most 200 characters.
+     */
+    company?: string;
+    /**
+     * At most 50 tags, trimmed and deduplicated case-insensitively, preserving original case. Send [] to clear.
+     */
+    tags?: Array<string>;
+    /**
+     * Contact subscription state. False prevents comment automation sends.
+     */
+    isSubscribed?: boolean;
+    /**
+     * Free-form notes, at most 5000 characters.
+     */
+    notes?: string;
+    /**
+     * At most 50 keys of 1–64 characters. Keys follow Convex record rules: printable ASCII, not starting with $ or _. Values are strings (at most 1000 characters), finite numbers, booleans, or null. PATCH replaces the entire object.
+     */
+    customFields?: {
+        [key: string]: string | number | boolean | null;
+    };
+    /**
+     * Required when the bulk envelope has accountId. Supplying an identity without an envelope accountId is a per-row error.
+     */
+    platformIdentifier?: string;
+    /**
+     * Optional username or friendly handle, at most 200 characters. Without a channel it is ignored and a warning is returned.
+     */
+    displayIdentifier?: string;
+};
+
+/**
+ * Import 1–1000 contacts into one profile. A supplied accountId applies to every row. Duplicates by channel (first) or profile email are skipped and only new tags are merged, retaining existing case. A merged tag list over 50 is a row error. When the 5000-contact cap is reached, remaining rows receive contact limit reached errors.
+ */
+export type ContactBulkCreateRequest = {
+    /**
+     * Owning profile id; immutable and must be in the API key scope.
+     */
+    profileId: string;
+    /**
+     * Connected account id; must belong to the same profile and caller.
+     */
+    accountId?: string;
+    /**
+     * Ignored when accountId is supplied. Without accountId, this field is rejected with 400 validation; platform disambiguation is not supported.
+     */
+    platform?: string;
+    /**
+     * Rows to process in one mutation. Row validation errors are reported individually.
+     */
+    contacts: Array<ContactBulkCreateRow>;
+};
+
+export type ContactBulkCreateResponse = {
+    /**
+     * Import outcome summary.
+     */
+    message: string;
+    /**
+     * Number of newly created contacts.
+     */
+    created: number;
+    /**
+     * Number of duplicate contacts skipped, with tags merged.
+     */
+    skipped: number;
+    /**
+     * Per-row errors using 1-based row numbers.
+     */
+    errors: Array<string>;
+    /**
+     * Number of submitted rows; equals created + skipped + errors.length.
+     */
+    total: number;
 };
 
 export type ListProfilesData = {
@@ -5352,6 +5695,471 @@ export type ListCommentAutomationLogsResponses = {
 };
 
 export type ListCommentAutomationLogsResponse = ListCommentAutomationLogsResponses[keyof ListCommentAutomationLogsResponses];
+
+export type ListContactsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Owning profile id; immutable and must be in the API key scope.
+         */
+        profileId?: string;
+        /**
+         * Connected account id; must belong to the same profile and caller.
+         */
+        accountId?: string;
+        /**
+         * Case-insensitive substring search across name, email and company.
+         */
+        search?: string;
+        /**
+         * Match this tag case-insensitively; combined with tags using any-match semantics.
+         */
+        tag?: string;
+        /**
+         * Comma-separated tags; a contact matching any supplied tag is included.
+         */
+        tags?: string;
+        /**
+         * PostZen platform. Always resolved from the connected account.
+         */
+        platform?: 'x' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest' | 'bluesky' | 'telegram';
+        /**
+         * Filter by contact subscription state.
+         */
+        isSubscribed?: 'true' | 'false';
+        /**
+         * Page size, an integer from 1 to 200; invalid values return 400.
+         */
+        limit?: number;
+        /**
+         * Number of matching rows to skip, a nonnegative integer.
+         */
+        skip?: number;
+    };
+    url: '/v1/contacts';
+};
+
+export type ListContactsErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type ListContactsError = ListContactsErrors[keyof ListContactsErrors];
+
+export type ListContactsResponses = {
+    /**
+     * List contacts.
+     */
+    200: {
+        /**
+         * Filtered contacts ordered by createdAt descending, then creation order descending.
+         */
+        contacts: Array<ContactListItem>;
+        /**
+         * Available filter values before applying any query filters.
+         */
+        filters: {
+            /**
+             * Distinct tags across all unfiltered in-scope contacts, sorted and deduplicated case-insensitively.
+             */
+            tags: Array<string>;
+        };
+        /**
+         * Offset pagination over the filtered set.
+         */
+        pagination: {
+            /**
+             * Total filtered contact count before pagination.
+             */
+            total: number;
+            /**
+             * Requested page size.
+             */
+            limit: number;
+            /**
+             * Number of matching contacts skipped.
+             */
+            skip: number;
+            /**
+             * Whether more matching contacts remain after this page.
+             */
+            hasMore: boolean;
+        };
+    };
+};
+
+export type ListContactsResponse = ListContactsResponses[keyof ListContactsResponses];
+
+export type CreateContactData = {
+    body: ContactCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/contacts';
+};
+
+export type CreateContactErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * duplicateContact: email exists in this profile; duplicateChannel: identity exists on this account; limitReached: 5000 contacts per user.
+     */
+    409: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type CreateContactError = CreateContactErrors[keyof CreateContactErrors];
+
+export type CreateContactResponses = {
+    /**
+     * Create a contact.
+     */
+    201: {
+        /**
+         * Operation confirmation.
+         */
+        message: string;
+        /**
+         * Contact details.
+         */
+        contact: Contact;
+        /**
+         * First channel, included only when created.
+         */
+        channel?: ContactChannel;
+        /**
+         * Included only when displayIdentifier was supplied without a channel.
+         */
+        warning?: string;
+    };
+};
+
+export type CreateContactResponse = CreateContactResponses[keyof CreateContactResponses];
+
+export type BulkCreateContactsData = {
+    body: ContactBulkCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/contacts/bulk';
+};
+
+export type BulkCreateContactsErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type BulkCreateContactsError = BulkCreateContactsErrors[keyof BulkCreateContactsErrors];
+
+export type BulkCreateContactsResponses = {
+    /**
+     * Bulk create contacts.
+     */
+    200: ContactBulkCreateResponse;
+};
+
+export type BulkCreateContactsResponse = BulkCreateContactsResponses[keyof BulkCreateContactsResponses];
+
+export type DeleteContactData = {
+    body?: never;
+    path: {
+        /**
+         * Contact owning this channel.
+         */
+        contactId: string;
+    };
+    query?: never;
+    url: '/v1/contacts/{contactId}';
+};
+
+export type DeleteContactErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type DeleteContactError = DeleteContactErrors[keyof DeleteContactErrors];
+
+export type DeleteContactResponses = {
+    /**
+     * Delete a contact.
+     */
+    200: {
+        /**
+         * Operation confirmation.
+         */
+        message: string;
+    };
+};
+
+export type DeleteContactResponse = DeleteContactResponses[keyof DeleteContactResponses];
+
+export type GetContactData = {
+    body?: never;
+    path: {
+        /**
+         * Contact owning this channel.
+         */
+        contactId: string;
+    };
+    query?: never;
+    url: '/v1/contacts/{contactId}';
+};
+
+export type GetContactErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type GetContactError = GetContactErrors[keyof GetContactErrors];
+
+export type GetContactResponses = {
+    /**
+     * Get a contact.
+     */
+    200: {
+        /**
+         * Contact details with conversation ids and updatedAt.
+         */
+        contact: Contact & {
+            /**
+             * Distinct non-null platform conversation ids across the channels.
+             */
+            conversationIds: Array<string>;
+        };
+        /**
+         * Channels ordered oldest first by createdAt.
+         */
+        channels: Array<ContactChannel>;
+    };
+};
+
+export type GetContactResponse = GetContactResponses[keyof GetContactResponses];
+
+export type UpdateContactData = {
+    body: ContactUpdateRequest;
+    path: {
+        /**
+         * Contact owning this channel.
+         */
+        contactId: string;
+    };
+    query?: never;
+    url: '/v1/contacts/{contactId}';
+};
+
+export type UpdateContactErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * duplicateContact: email already belongs to another contact in the same profile.
+     */
+    409: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type UpdateContactError = UpdateContactErrors[keyof UpdateContactErrors];
+
+export type UpdateContactResponses = {
+    /**
+     * Update a contact.
+     */
+    200: {
+        /**
+         * Operation confirmation.
+         */
+        message: string;
+        /**
+         * Contact details.
+         */
+        contact: Contact;
+    };
+};
+
+export type UpdateContactResponse = UpdateContactResponses[keyof UpdateContactResponses];
+
+export type GetContactChannelsData = {
+    body?: never;
+    path: {
+        /**
+         * Contact owning this channel.
+         */
+        contactId: string;
+    };
+    query?: never;
+    url: '/v1/contacts/{contactId}/channels';
+};
+
+export type GetContactChannelsErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type GetContactChannelsError = GetContactChannelsErrors[keyof GetContactChannelsErrors];
+
+export type GetContactChannelsResponses = {
+    /**
+     * Get contact channels.
+     */
+    200: {
+        /**
+         * Channels ordered oldest first by createdAt.
+         */
+        channels: Array<ContactChannel>;
+    };
+};
+
+export type GetContactChannelsResponse = GetContactChannelsResponses[keyof GetContactChannelsResponses];
 
 export type ListWebhooksData = {
     body?: never;

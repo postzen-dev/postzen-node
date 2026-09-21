@@ -222,14 +222,9 @@ function createTimeoutSignal(timeout: number): AbortSignal | undefined {
     return undefined;
   }
 
-  const abortSignal = AbortSignal as typeof AbortSignal & {
-    timeout?: (milliseconds: number) => AbortSignal;
-  };
-
-  if (typeof abortSignal.timeout === 'function') {
-    return abortSignal.timeout(timeout);
-  }
-
+  // Deliberately not AbortSignal.timeout(): Node holds those signals weakly, so
+  // one that nothing else references can be garbage-collected before it fires.
+  // A timer closure keeps this controller (and its signal) alive until it aborts.
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(abortError()), timeout);
   const unref = (timer as { unref?: () => void }).unref;
@@ -385,19 +380,24 @@ ${namespaceBlocks}
     const timeoutSignal = createTimeoutSignal(this._timeout);
     const callerSignal = options?.signal ?? undefined;
 
+    const signal = mergeSignals([callerSignal, timeoutSignal]);
+
     requestOptions.client = this._client;
-    requestOptions.signal = mergeSignals([callerSignal, timeoutSignal]);
+    requestOptions.signal = signal;
 
     if (options?.fetch) {
-      requestOptions.fetch = this._wrapFetch(options.fetch);
+      requestOptions.fetch = this._wrapFetch(options.fetch, signal);
     }
 
     return requestOptions;
   }
 
-  private _wrapFetch(fetchImpl: FetchFn): FetchFn {
+  private _wrapFetch(fetchImpl: FetchFn, signal?: AbortSignal): FetchFn {
     return (request: Request) => {
-      return raceWithAbort(fetchImpl(request), request.signal ?? undefined);
+      // Race against the signal we built, not request.signal: the Request's own
+      // controller is only kept alive by the Request object, which a custom fetch
+      // may drop, and then an abort on our signal never reaches request.signal.
+      return raceWithAbort(fetchImpl(request), signal ?? request.signal ?? undefined);
     };
   }
 }

@@ -6,11 +6,13 @@
 import packageJson from '../package.json';
 import { createClient, createConfig, type Client } from './generated/client';
 import {
+  bulkCreateContacts,
   bulkUploadPosts,
   completeConnect,
   createApiKey,
   createCommentAutomation,
   createConnectUrl,
+  createContact,
   createMediaPresign,
   createPinterestBoard,
   createPost,
@@ -19,6 +21,7 @@ import {
   createWebhook,
   deleteApiKey,
   deleteCommentAutomation,
+  deleteContact,
   deleteInboxComment,
   deletePost,
   deleteProfile,
@@ -28,6 +31,8 @@ import {
   getAnalytics,
   getBestTimeToPost,
   getCommentAutomation,
+  getContact,
+  getContactChannels,
   getDailyMetrics,
   getFollowerStats,
   getInboxConversation,
@@ -42,6 +47,7 @@ import {
   listApiKeys,
   listCommentAutomationLogs,
   listCommentAutomations,
+  listContacts,
   listInboxConversationMessages,
   listInboxConversations,
   listInboxPostComments,
@@ -64,6 +70,7 @@ import {
   testWebhook,
   unhideInboxComment,
   updateCommentAutomation,
+  updateContact,
   updateInboxConversation,
   updatePinterestBoards,
   updatePost,
@@ -125,14 +132,9 @@ function createTimeoutSignal(timeout: number): AbortSignal | undefined {
     return undefined;
   }
 
-  const abortSignal = AbortSignal as typeof AbortSignal & {
-    timeout?: (milliseconds: number) => AbortSignal;
-  };
-
-  if (typeof abortSignal.timeout === 'function') {
-    return abortSignal.timeout(timeout);
-  }
-
+  // Deliberately not AbortSignal.timeout(): Node holds those signals weakly, so
+  // one that nothing else references can be garbage-collected before it fires.
+  // A timer closure keeps this controller (and its signal) alive until it aborts.
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(abortError()), timeout);
   const unref = (timer as { unref?: () => void }).unref;
@@ -300,6 +302,19 @@ export class PostZen {
   };
 
   /**
+   * contacts API
+   */
+  contacts = {
+    bulkCreateContacts: ((options?: Parameters<typeof bulkCreateContacts>[0]) => bulkCreateContacts(this._withRequestOptions(options) as Parameters<typeof bulkCreateContacts>[0])) as typeof bulkCreateContacts,
+    createContact: ((options?: Parameters<typeof createContact>[0]) => createContact(this._withRequestOptions(options) as Parameters<typeof createContact>[0])) as typeof createContact,
+    deleteContact: ((options?: Parameters<typeof deleteContact>[0]) => deleteContact(this._withRequestOptions(options) as Parameters<typeof deleteContact>[0])) as typeof deleteContact,
+    getContact: ((options?: Parameters<typeof getContact>[0]) => getContact(this._withRequestOptions(options) as Parameters<typeof getContact>[0])) as typeof getContact,
+    getContactChannels: ((options?: Parameters<typeof getContactChannels>[0]) => getContactChannels(this._withRequestOptions(options) as Parameters<typeof getContactChannels>[0])) as typeof getContactChannels,
+    listContacts: ((options?: Parameters<typeof listContacts>[0]) => listContacts(this._withRequestOptions(options) as Parameters<typeof listContacts>[0])) as typeof listContacts,
+    updateContact: ((options?: Parameters<typeof updateContact>[0]) => updateContact(this._withRequestOptions(options) as Parameters<typeof updateContact>[0])) as typeof updateContact,
+  };
+
+  /**
    * apikeys API
    */
   apikeys = {
@@ -429,19 +444,24 @@ export class PostZen {
     const timeoutSignal = createTimeoutSignal(this._timeout);
     const callerSignal = options?.signal ?? undefined;
 
+    const signal = mergeSignals([callerSignal, timeoutSignal]);
+
     requestOptions.client = this._client;
-    requestOptions.signal = mergeSignals([callerSignal, timeoutSignal]);
+    requestOptions.signal = signal;
 
     if (options?.fetch) {
-      requestOptions.fetch = this._wrapFetch(options.fetch);
+      requestOptions.fetch = this._wrapFetch(options.fetch, signal);
     }
 
     return requestOptions;
   }
 
-  private _wrapFetch(fetchImpl: FetchFn): FetchFn {
+  private _wrapFetch(fetchImpl: FetchFn, signal?: AbortSignal): FetchFn {
     return (request: Request) => {
-      return raceWithAbort(fetchImpl(request), request.signal ?? undefined);
+      // Race against the signal we built, not request.signal: the Request's own
+      // controller is only kept alive by the Request object, which a custom fetch
+      // may drop, and then an abort on our signal never reaches request.signal.
+      return raceWithAbort(fetchImpl(request), signal ?? request.signal ?? undefined);
     };
   }
 }

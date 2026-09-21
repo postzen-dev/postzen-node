@@ -9,9 +9,9 @@
   <a href="https://www.npmjs.com/package/@postzen/node"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license" /></a>
 </p>
 
-<p align="center"><strong>One API to post everywhere. 8 platforms, zero headaches.</strong></p>
+<p align="center"><strong>One API to post everywhere. 10 platforms, zero headaches.</strong></p>
 
-The official Node.js SDK for the [PostZen API](https://docs.postzen.dev) — schedule and publish social media posts across X/Twitter, Instagram, TikTok, LinkedIn, Facebook, YouTube, Threads, and Pinterest with a single integration.
+The official Node.js SDK for the [PostZen API](https://docs.postzen.dev) — schedule and publish social media posts across X/Twitter, Instagram, TikTok, LinkedIn, Facebook, YouTube, Threads, Pinterest, Bluesky, and Telegram with a single integration.
 
 ## Installation
 
