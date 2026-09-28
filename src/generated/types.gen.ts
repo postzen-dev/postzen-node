@@ -1620,6 +1620,14 @@ export type ApiPostPlatformResult = {
     status: 'draft' | 'scheduled' | 'pending' | 'publishing' | 'published' | 'failed' | 'canceled';
     platformPostUrl?: string;
     error?: string;
+    /**
+     * The per-platform content override this target was created with, if any.
+     */
+    customContent?: string;
+    /**
+     * The platform settings this target was created with, echoed back in the same shape the create request accepts. For X threads, each `threadItems[].mediaItems` entry carries the hosted `url` of the stored media.
+     */
+    settings?: PostPlatformSettings;
 };
 
 export type ApiPostAccount = {
