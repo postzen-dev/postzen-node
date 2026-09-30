@@ -72,6 +72,10 @@ export type CommentAutomation = {
     createdAt: string;
     updatedAt: string;
     audience: CommentAutomationAudience;
+    /**
+     * The Opening DM that actually goes out: the stored one, the defaults when `audience` filters by followers, or null when off.
+     */
+    openingDm: CommentAutomationOpeningDm;
     followGate?: CommentAutomationFollowGate;
 };
 
@@ -152,6 +156,10 @@ export type CommentAutomationCreateRequest = {
     isActive?: boolean;
     linkTracking?: false;
     audience?: CommentAutomationAudience;
+    /**
+     * Send an object (even `{}` for the defaults) to turn the Opening DM on. Omit to leave it off, unless `audience` filters by followers.
+     */
+    openingDm?: CommentAutomationOpeningDm;
     followGate?: CommentAutomationFollowGate;
 };
 
@@ -222,6 +230,10 @@ export type CommentAutomationUpdateRequest = {
     isActive?: boolean;
     linkTracking?: false;
     audience?: CommentAutomationAudience;
+    /**
+     * Send null to turn the Opening DM off. A follower-based `audience` still sends the defaults.
+     */
+    openingDm?: CommentAutomationOpeningDm;
     followGate?: CommentAutomationFollowGate;
 };
 
@@ -238,7 +250,7 @@ export type CommentAutomationLog = {
     commentReplyError?: string;
     source: 'comment' | 'story_reply';
     /**
-     * gated: the follow-gate confirmation DM went out and we are waiting for the tap; it flips to sent or skipped when they tap. An unsuccessful audience check keeps the gate open for another tap.
+     * gated: a button DM (Opening DM or follow request) went out and we are waiting for the tap; it flips to sent or skipped when they tap. A tap from someone who still does not follow keeps it gated for another tap.
      */
     status: 'pending' | 'sent' | 'failed' | 'skipped' | 'gated';
     buttonsDropped?: boolean;
@@ -246,6 +258,10 @@ export type CommentAutomationLog = {
     nextDueAt?: string;
     createdAt: string;
     updatedAt: string;
+    /**
+     * Which button DM a gated log is waiting on: `opening` (the Opening DM) or `follow` (the follow request).
+     */
+    gateStage?: 'opening' | 'follow';
     gateMessageId?: string;
     commenterIgsid?: string;
     /**
@@ -256,11 +272,14 @@ export type CommentAutomationLog = {
      * Unix timestamp in milliseconds.
      */
     gateTappedAt?: number;
+    /**
+     * Follow requests and not-following replies sent after taps.
+     */
     gateAttempts?: number;
     followerCount?: number;
     followStatus?: 'follower' | 'non_follower' | 'unknown';
     /**
-     * Meta rejected the postback template and delivery failed open.
+     * Meta rejected the Opening DM template and delivery failed open: the DM was sent without the audience check.
      */
     gateDropped?: boolean;
 };
@@ -2113,7 +2132,7 @@ export type CommentAutomationTemplate = {
 };
 
 /**
- * Who a comment automation answers. Instagram only - Meta exposes the follow relationship on no other platform, and only for people who have MESSAGED the account (a comment grants no consent). `whenUnknown` is therefore the important setting: it decides what happens for a first-time commenter.
+ * Who a comment automation answers. Instagram only - Meta exposes the follow relationship on no other platform, and only for people who have MESSAGED the account (a comment grants no consent). So any rule here sends the Opening DM first (`openingDm`, defaults when unset) and checks the person when they tap its button. Story replies are already messages and are checked right away.
  */
 export type CommentAutomationAudience = {
     followerStatus?: 'any' | 'follower' | 'non_follower';
@@ -2122,19 +2141,39 @@ export type CommentAutomationAudience = {
      */
     minFollowerCount?: number;
     /**
-     * What to do when Instagram will not reveal the follow relationship. `send` (default) - deliver the DM anyway (fails open). `skip` - stay silent. `verify` - send `followGate.message` with a confirm button. Tapping it is a message, which grants consent, so the re-check on the tap resolves and the real DM (or `followGate.notFollowingMessage`) follows automatically.
+     * Applies after the Opening DM tap, when Instagram still will not reveal the follow relationship. `send` (default) - deliver the DM anyway (fails open). `skip` - stay silent. `verify` - treat them as not following, so followerStatus=follower sends the follow request (`followGate.message`); tapping its button re-checks.
      */
     whenUnknown?: 'send' | 'skip' | 'verify';
 };
 
 /**
- * Copy for the follow gate. Sensible defaults are used for any field left empty.
+ * A first DM with a button, sent as the private reply to the comment. Tapping the button counts as the person messaging you, which opens the 24-hour messaging window and lets Instagram reveal whether they follow you. Required for any `audience` rule: when `audience` filters by followers and no `openingDm` is set, the defaults are used. Ignored for story replies, which already count as a message.
+ */
+export type CommentAutomationOpeningDm = {
+    /**
+     * Trimmed. Empty or omitted uses the default.
+     */
+    message?: string;
+    /**
+     * Trimmed. Empty or omitted uses the default.
+     */
+    buttonLabel?: string;
+};
+
+/**
+ * Copy for the follow request (audience.followerStatus=follower). Sensible defaults are used for any field left empty.
  */
 export type CommentAutomationFollowGate = {
+    /**
+     * The follow request sent after the Opening DM tap to people who do not follow yet.
+     */
     message?: string;
+    /**
+     * Label of the button on the follow request. Tapping it re-checks the follow.
+     */
     buttonLabel?: string;
     /**
-     * Sent to a commenter we know does not follow (followerStatus=follower). Omit to stay silent on a keyword comment; a confirm tap always gets an answer.
+     * Sent when they tap the follow request button but still do not follow. The button stays, so they can follow and tap again.
      */
     notFollowingMessage?: string;
 };
