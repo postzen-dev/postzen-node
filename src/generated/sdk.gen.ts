@@ -830,8 +830,6 @@ export const previewQueue = <ThrowOnError extends boolean = false>(options: Opti
 
 /**
  * Get post analytics
- * > **Coming soon** — Analytics endpoints are being rolled out and may return empty data until the rollout completes.
- *
  * Returns one post when `postId` is supplied. Otherwise returns a paginated analytics list with aggregate overview metrics.
  */
 export const getAnalytics = <ThrowOnError extends boolean = false>(options?: Options<GetAnalyticsData, ThrowOnError>) => {
@@ -849,8 +847,6 @@ export const getAnalytics = <ThrowOnError extends boolean = false>(options?: Opt
 
 /**
  * Get a post analytics timeline
- * > **Coming soon** — Analytics endpoints are being rolled out and may return empty data until the rollout completes.
- *
  * Returns one daily row per platform for a PostZen post, imported external post, or platform post id.
  */
 export const getPostTimeline = <ThrowOnError extends boolean = false>(options: Options<GetPostTimelineData, ThrowOnError>) => {
@@ -868,8 +864,6 @@ export const getPostTimeline = <ThrowOnError extends boolean = false>(options: O
 
 /**
  * Get daily analytics metrics
- * > **Coming soon** — Analytics endpoints are being rolled out and may return empty data until the rollout completes.
- *
  * Returns daily aggregate metrics and a per-platform breakdown. Publish attribution assigns lifetime metrics to the post's publish date; received attribution assigns metric deltas to the day they were observed.
  */
 export const getDailyMetrics = <ThrowOnError extends boolean = false>(options?: Options<GetDailyMetricsData, ThrowOnError>) => {
@@ -887,9 +881,7 @@ export const getDailyMetrics = <ThrowOnError extends boolean = false>(options?: 
 
 /**
  * Get the best times to post
- * > **Coming soon** — Analytics endpoints are being rolled out and may return empty data until the rollout completes.
- *
- * Returns historical engagement slots grouped by UTC day of week and hour, ordered by average engagement descending.
+ * Returns historical engagement slots grouped by UTC day of week and hour, ordered by average engagement descending. Hours are UTC; day_of_week uses 0 = Sunday through 6 = Saturday.
  */
 export const getBestTimeToPost = <ThrowOnError extends boolean = false>(options?: Options<GetBestTimeToPostData, ThrowOnError>) => {
     return (options?.client ?? _heyApiClient).get<GetBestTimeToPostResponses, GetBestTimeToPostErrors, ThrowOnError>({
@@ -906,8 +898,6 @@ export const getBestTimeToPost = <ThrowOnError extends boolean = false>(options?
 
 /**
  * Get follower statistics
- * > **Coming soon** — Analytics endpoints are being rolled out and may return empty data until the rollout completes.
- *
  * Returns follower history and growth for connected accounts at daily, weekly, or monthly granularity.
  */
 export const getFollowerStats = <ThrowOnError extends boolean = false>(options?: Options<GetFollowerStatsData, ThrowOnError>) => {
@@ -925,8 +915,6 @@ export const getFollowerStats = <ThrowOnError extends boolean = false>(options?:
 
 /**
  * Synchronize external posts
- * > **Coming soon** — Analytics endpoints are being rolled out and may return empty data until the rollout completes.
- *
  * Fetches an account's latest posts published directly on its platform. Supplying `url` or `postId` searches for a specific post. Requests made within the per-account debounce window return cached results with `synced.skipped` set to true.
  */
 export const syncExternalPosts = <ThrowOnError extends boolean = false>(options: Options<SyncExternalPostsData, ThrowOnError>) => {

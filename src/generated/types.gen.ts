@@ -401,6 +401,9 @@ export type AnalyticsPlatform = 'x' | 'instagram' | 'tiktok' | 'linkedin' | 'fac
 
 export type AnalyticsSource = 'all' | 'postzen' | 'external';
 
+/**
+ * The eight normalized metrics returned for every platform. A platform that reports a single view count returns it in both `views` and `impressions`. A metric the platform does not report is returned as `0`, so check the per-platform coverage in the API reference before reading a zero as no activity. `reach` is currently reported for Instagram only.
+ */
 export type AnalyticsMetricTotals = {
     impressions: number;
     reach: number;
@@ -414,7 +417,7 @@ export type AnalyticsMetricTotals = {
 
 export type AnalyticsMetrics = AnalyticsMetricTotals & {
     /**
-     * Interaction count divided by impressions, multiplied by 100 and rounded to two decimals.
+     * Interactions (likes + comments + shares + saves + clicks) divided by impressions, multiplied by 100 and rounded to two decimals. On platforms that report no impressions, such as Bluesky, the value is the interaction count multiplied by 100 and is not a rate.
      */
     engagementRate: number;
     lastUpdated: string | null;
@@ -471,7 +474,7 @@ export type AnalyticsListResponse = {
     pagination: Pagination;
     overview: AnalyticsOverview;
     /**
-     * True when the requested window contained more posts than a single response can scan. `pagination.total` and `overview` then describe the most recent slice of the window rather than all of it; narrow `dateFrom`/`dateTo`, `accountId`, or `platform` to get exact totals.
+     * True when the requested window contained more posts than a single response can scan. `pagination.total` and `overview` then describe the most recent slice of the window rather than all of it; narrow `fromDate`/`toDate`, `accountId`, or `platform` to get exact totals.
      */
     truncated: boolean;
 };
@@ -514,10 +517,21 @@ export type BestTimeResponse = {
          * UTC day of week, where 0 is Sunday.
          */
         day_of_week: number;
+        /**
+         * Hour of day in UTC (0–23).
+         */
         hour: number;
         avg_engagement: number;
         post_count: number;
+        /**
+         * UTC weekday name corresponding to day_of_week (0 = Sunday).
+         */
+        day_name: 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
     }>;
+    /**
+     * Timezone used for every slot weekday and hour.
+     */
+    timezone: 'UTC';
 };
 
 export type FollowerStatsResponse = {
@@ -1465,8 +1479,32 @@ export type FacebookSettings = {
     firstComment?: string;
 };
 
+/**
+ * Threads target settings. Set `threadItems` to publish a chain of 1–25 posts, each with up to 500 characters and 10 images/videos. The first item is the root and each later item replies to the previous one. When set, the target's `content`/`customContent` and the post's top-level `mediaItems` are not published to Threads; they still apply to other targets. `replyControl` applies only to the first post.
+ */
 export type ThreadsSettings = {
+    /**
+     * Who can reply. Omit to let everyone reply. When threadItems is set, applies only to the first post.
+     */
     replyControl?: 'everyone' | 'accountsYouFollow' | 'mentionedOnly';
+    /**
+     * Publish this target as a thread of 1–25 posts, in order. The first item is the root post and each later item is published as a reply to the previous one. When set, the target's `content`/`customContent` and the post's top-level `mediaItems` are not published to Threads; they still apply to the post's other targets. `platformPostUrl` on the result is the root post's URL. A one-item thread publishes like a plain post. Each item supports up to 500 characters and 10 images/videos. `replyControl` applies only to the first post.
+     */
+    threadItems?: Array<ThreadsThreadItem>;
+};
+
+/**
+ * One post in a Threads thread. Each item needs text, media, or both.
+ */
+export type ThreadsThreadItem = {
+    /**
+     * Text of this post in the thread, up to 500 characters. May be empty only when the item has `mediaItems`.
+     */
+    content: string;
+    /**
+     * Up to 10 images/videos attached to this post, in the same format as the post's top-level `mediaItems`. Images (including GIF media) and videos can be mixed within an item.
+     */
+    mediaItems?: Array<PostMediaItem>;
 };
 
 export type TikTokSettings = {
@@ -1631,6 +1669,13 @@ export type ApiPost = {
     queueId?: string | null;
     timezone: string;
     platforms: Array<ApiPostPlatformResult>;
+    /**
+     * Attached media in stored order, with resolved hosted URLs and optional titles (alt text). Always present; empty when there is no available media.
+     */
+    mediaItems: Array<{
+        url: string;
+        title?: string;
+    }>;
 };
 
 export type ApiPostPlatformResult = {
@@ -1644,7 +1689,7 @@ export type ApiPostPlatformResult = {
      */
     customContent?: string;
     /**
-     * The platform settings this target was created with, echoed back in the same shape the create request accepts. For X threads, each `threadItems[].mediaItems` entry carries the hosted `url` of the stored media.
+     * The platform settings this target was created with, echoed back in the same shape the create request accepts. For X and Threads threads, each `threadItems[].mediaItems` entry carries the hosted `url` of the stored media.
      */
     settings?: PostPlatformSettings;
 };
@@ -4958,11 +5003,11 @@ export type GetAnalyticsData = {
          */
         source?: AnalyticsSource;
         /**
-         * Inclusive range start. Accepts `YYYY-MM-DD` or an ISO 8601 datetime. Defaults to 90 days before `toDate`.
+         * Inclusive range start. Defaults to 90 days before `toDate`.
          */
         fromDate?: AnalyticsDate;
         /**
-         * Inclusive range end. Accepts `YYYY-MM-DD` or an ISO 8601 datetime. Defaults to the current time.
+         * Inclusive range end. Defaults to the current time.
          */
         toDate?: AnalyticsDate;
         /**
