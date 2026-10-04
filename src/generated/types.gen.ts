@@ -1401,7 +1401,7 @@ export type CreatePostRequest = {
      */
     isDraft?: boolean;
     /**
-     * Profile id whose queue places the post. PostZen assigns the next free slot and returns it as `scheduledFor`. Do not call `GET /v1/queue/next-slot` and pass the result as `scheduledFor`: the slot is only claimed by the create call itself, so a fetched slot can be taken by another request before yours arrives, and the post would be scheduled outside the queue.
+     * Profile id whose queue places the post. It can be any profile the API key can access and does not have to hold the target accounts; it is required when the accounts span more than one profile. PostZen assigns the next free slot and returns it as `scheduledFor`. Do not call `GET /v1/queue/next-slot` and pass the result as `scheduledFor`: the slot is only claimed by the create call itself, so a fetched slot can be taken by another request before yours arrives, and the post would be scheduled outside the queue.
      */
     queuedFromProfile?: string;
     /**
@@ -1538,11 +1538,11 @@ export type LinkedInSettings = {
      */
     documentTitle?: string;
     /**
-     * Publish as a LinkedIn company page instead of the connected member. Accepts either the full URN (`urn:li:organization:12345`) or the bare numeric page id (`12345`), which PostZen expands to the URN. The connection must have been authorized with the organization scopes — reconnect the account if it was connected before company-page posting was enabled. Also accepted as `organizationId` / `organization_id`.
+     * Not available yet: company-page posting is waiting on LinkedIn's approval of PostZen's Community Management API access, and LinkedIn rejects posts that set this today, so leave it unset. Once available, this publishes as a LinkedIn company page instead of the connected member. Accepts either the full URN (`urn:li:organization:12345`) or the bare numeric page id (`12345`), which PostZen expands to the URN. The connection must have been authorized with the organization scopes. Also accepted as `organizationId` / `organization_id`.
      */
     organizationUrn?: string;
     /**
-     * Comment posted by the same author immediately after the post goes live. LinkedIn's comment composer caps this at 1,250 characters, tighter than the 3,000-character post body. Best-effort: a failure here is logged and never fails the post, and the post is never retried because of it.
+     * Comment posted by the same author immediately after the post goes live. LinkedIn's comment composer caps this at 1,250 characters, tighter than the 3,000-character post body. Best-effort: a failure here is logged and never fails the post, and the post is never retried because of it. Not available yet on LinkedIn: first comments wait on the same LinkedIn approval as company-page posting, so today the post publishes without the comment.
      */
     firstComment?: string;
     /**
@@ -1554,7 +1554,7 @@ export type LinkedInSettings = {
      */
     reshareUrl?: string;
     /**
-     * Restrict who sees the post to these countries, as uppercase ISO 3166-1 alpha-2 codes (for example `["US", "CA"]`). Up to 25 countries, and organization posts only — supplying this without `organizationUrn` is a validation error.
+     * Restrict who sees the post to these countries, as uppercase ISO 3166-1 alpha-2 codes (for example `["US", "CA"]`). Up to 25 countries, and organization posts only — supplying this without `organizationUrn` is a validation error. Not available yet, because it requires `organizationUrn`.
      */
     geoRestrictionCountries?: Array<string>;
 };
@@ -1682,6 +1682,14 @@ export type ApiPostPlatformResult = {
     platform: PublicPlatformInput;
     accountId: ApiPostAccount;
     status: 'draft' | 'scheduled' | 'pending' | 'publishing' | 'published' | 'failed' | 'canceled';
+    /**
+     * The platform's own id for the published post. Present as soon as this target is published, so it can be used right away with the inbox and analytics endpoints. For a thread, this is the root post's id.
+     */
+    platformPostId?: string;
+    /**
+     * X and Threads thread targets only: the platform id of every post in the thread, root first.
+     */
+    platformPostIds?: Array<string>;
     platformPostUrl?: string;
     error?: string;
     /**
@@ -3433,7 +3441,7 @@ export type ListPostsData = {
     path?: never;
     query?: {
         /**
-         * Filter posts by profile id.
+         * Return posts that target at least one account in this profile. A post whose accounts span several profiles is listed under each of them.
          */
         profileId?: string;
         /**
@@ -3742,7 +3750,7 @@ export type ListPostCommentsErrors = {
      */
     401: ErrorResponse;
     /**
-     * The post was authored by a member rather than a company page (`personalPostUnsupported`), the API key cannot access the post's profile (`forbidden`), organization engagement reads are disabled on the deployment (`orgScopesDisabled`), or the connection is missing `r_organization_social_feed` (`platformCapabilityMissing`).
+     * The post was authored by a member rather than a company page (`personalPostUnsupported`), the API key cannot access every profile the post targets (`forbidden`), organization engagement reads are disabled on the deployment (`orgScopesDisabled`), or the connection is missing `r_organization_social_feed` (`platformCapabilityMissing`).
      */
     403: LinkedInSocialReadErrorResponse;
     /**
@@ -3817,7 +3825,7 @@ export type ListPostReactionsErrors = {
      */
     401: ErrorResponse;
     /**
-     * The post was authored by a member rather than a company page (`personalPostUnsupported`), the API key cannot access the post's profile (`forbidden`), organization engagement reads are disabled on the deployment (`orgScopesDisabled`), or the connection is missing `r_organization_social_feed` (`platformCapabilityMissing`).
+     * The post was authored by a member rather than a company page (`personalPostUnsupported`), the API key cannot access every profile the post targets (`forbidden`), organization engagement reads are disabled on the deployment (`orgScopesDisabled`), or the connection is missing `r_organization_social_feed` (`platformCapabilityMissing`).
      */
     403: LinkedInSocialReadErrorResponse;
     /**

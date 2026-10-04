@@ -369,7 +369,7 @@ export const bulkUploadPosts = <ThrowOnError extends boolean = false>(options: O
 
 /**
  * List posts
- * Returns posts created for the profiles available to the API key, newest first. Read-only and read-write API keys are accepted. Published posts include a `platformPostUrl` for each published platform target. Results are capped to the 1000 most recent matching posts.
+ * Returns posts the API key can access, newest first. A post's profiles are the profiles of its target accounts, and a key limited to selected profiles only sees posts whose accounts all sit in profiles it can access. Read-only and read-write API keys are accepted. Published posts include a `platformPostId` and `platformPostUrl` for each published platform target. Results are capped to the 1000 most recent matching posts.
  */
 export const listPosts = <ThrowOnError extends boolean = false>(options?: Options<ListPostsData, ThrowOnError>) => {
     return (options?.client ?? _heyApiClient).get<ListPostsResponses, ListPostsErrors, ThrowOnError>({
@@ -386,7 +386,7 @@ export const listPosts = <ThrowOnError extends boolean = false>(options?: Option
 
 /**
  * Create a post
- * Creates a draft, scheduled post, or immediate post. This endpoint requires a read-write API key. Provide exactly one creation mode: `publishNow`, `scheduledFor`, or `isDraft`.
+ * Creates a draft, scheduled post, or immediate post. This endpoint requires a read-write API key. Provide exactly one creation mode: `publishNow`, `scheduledFor`, or `isDraft`. The accounts in `platforms` can belong to different profiles; an API key limited to selected profiles must have access to the profile of every account.
  */
 export const createPost = <ThrowOnError extends boolean = false>(options: Options<CreatePostData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).post<CreatePostResponses, CreatePostErrors, ThrowOnError>({
@@ -424,7 +424,7 @@ export const deletePost = <ThrowOnError extends boolean = false>(options: Option
 
 /**
  * Get a post
- * Returns one post when it belongs to a profile available to the API key. Missing and inaccessible posts both return 404.
+ * Returns one post when the API key can access the profile of every account the post targets. Missing and inaccessible posts both return 404.
  */
 export const getPost = <ThrowOnError extends boolean = false>(options: Options<GetPostData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).get<GetPostResponses, GetPostErrors, ThrowOnError>({
@@ -441,7 +441,7 @@ export const getPost = <ThrowOnError extends boolean = false>(options: Options<G
 
 /**
  * Update a post
- * Updates an editable post. Every body field is optional; omitted fields keep their current values, and omitting all timing fields keeps the current scheduling and draft status. At most one of `publishNow`, `scheduledFor`, `isDraft`, or `queuedFromProfile` may select a new timing mode.
+ * Updates an editable post. Every body field is optional; omitted fields keep their current values, and omitting all timing fields keeps the current scheduling and draft status. At most one of `publishNow`, `scheduledFor`, `isDraft`, or `queuedFromProfile` may select a new timing mode. Accounts in `platforms` can belong to different profiles; the API key needs access to all of them.
  */
 export const updatePost = <ThrowOnError extends boolean = false>(options: Options<UpdatePostData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).put<UpdatePostResponses, UpdatePostErrors, ThrowOnError>({
@@ -462,7 +462,7 @@ export const updatePost = <ThrowOnError extends boolean = false>(options: Option
 
 /**
  * List comments on a LinkedIn post
- * Returns the comments LinkedIn holds for a post published through PostZen. LinkedIn only, and organization (company page) posts only. The post's LinkedIn connection must hold `r_organization_social_feed`, which LinkedIn ships with its Community Management API product — reconnect the account if it was connected before company-page posting was enabled. A personal (member) post always returns `403 personalPostUnsupported`: reading a member's own comments and reactions needs `r_member_social_feed`, which LinkedIn grants to select developers only. Read-only and read-write API keys are accepted.
+ * Returns the comments LinkedIn holds for a post published through PostZen. LinkedIn only, and organization (company page) posts only. The post's LinkedIn connection must hold `r_organization_social_feed`, which LinkedIn ships with its Community Management API product. Not available yet: company-page posting is waiting on LinkedIn's approval of PostZen's Community Management API access, and until then this endpoint returns `403 orgScopesDisabled`. A personal (member) post always returns `403 personalPostUnsupported`: reading a member's own comments and reactions needs `r_member_social_feed`, which LinkedIn grants to select developers only. Read-only and read-write API keys are accepted.
  */
 export const listPostComments = <ThrowOnError extends boolean = false>(options: Options<ListPostCommentsData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).get<ListPostCommentsResponses, ListPostCommentsErrors, ThrowOnError>({
@@ -479,7 +479,7 @@ export const listPostComments = <ThrowOnError extends boolean = false>(options: 
 
 /**
  * List reactions on a LinkedIn post
- * Returns the individual reactions LinkedIn holds for a post published through PostZen, plus a per-type count of the returned page. LinkedIn only, and organization (company page) posts only. The post's LinkedIn connection must hold `r_organization_social_feed`, which LinkedIn ships with its Community Management API product — reconnect the account if it was connected before company-page posting was enabled. A personal (member) post always returns `403 personalPostUnsupported`: reading a member's own comments and reactions needs `r_member_social_feed`, which LinkedIn grants to select developers only. Read-only and read-write API keys are accepted.
+ * Returns the individual reactions LinkedIn holds for a post published through PostZen, plus a per-type count of the returned page. LinkedIn only, and organization (company page) posts only. The post's LinkedIn connection must hold `r_organization_social_feed`, which LinkedIn ships with its Community Management API product. Not available yet: company-page posting is waiting on LinkedIn's approval of PostZen's Community Management API access, and until then this endpoint returns `403 orgScopesDisabled`. A personal (member) post always returns `403 personalPostUnsupported`: reading a member's own comments and reactions needs `r_member_social_feed`, which LinkedIn grants to select developers only. Read-only and read-write API keys are accepted.
  */
 export const listPostReactions = <ThrowOnError extends boolean = false>(options: Options<ListPostReactionsData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).get<ListPostReactionsResponses, ListPostReactionsErrors, ThrowOnError>({
