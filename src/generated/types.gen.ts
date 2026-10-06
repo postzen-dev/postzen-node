@@ -2163,7 +2163,7 @@ export type CommentAutomationTemplateElement = {
      */
     subtitle?: string;
     /**
-     * Public HTTPS image URL that Meta fetches. `POST /v1/media/presign` returns one that qualifies.
+     * Public HTTPS image URL that Meta fetches. A `publicUrl` from `POST /v1/media/presign` qualifies and is kept for as long as an automation uses it; upload the bytes before saving the automation.
      */
     imageUrl: string;
     /**
