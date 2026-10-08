@@ -1813,9 +1813,656 @@ export type ApiKeyCreateResponse = {
 };
 
 /**
- * Webhook event type. Receivers should tolerate additional event types in future API versions.
+ * Webhook event type. See the Webhook Events section for each event's trigger and payload. Receivers should tolerate additional event types in future API versions.
  */
-export type WebhookEvent = 'post.published' | 'post.partially_failed' | 'post.failed' | 'account.needs_reauth' | 'account.disconnected' | 'webhook.test';
+export type WebhookEvent = 'post.scheduled' | 'post.published' | 'post.partially_failed' | 'post.failed' | 'post.cancelled' | 'post.platform.published' | 'post.platform.failed' | 'post.external.created' | 'account.connected' | 'account.needs_reauth' | 'account.disconnected' | 'analytics.synced' | 'conversation.started' | 'message.received' | 'message.sent' | 'comment.received' | 'contact.tag_added' | 'contact.tag_removed' | 'contact.field_changed' | 'webhook.test';
+
+/**
+ * Platform of the account an event refers to. Webhook payloads use `x` for X (Twitter).
+ */
+export type WebhookPlatform = 'x' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook' | 'youtube' | 'threads' | 'pinterest' | 'bluesky' | 'telegram';
+
+/**
+ * Status of one platform target when the event was created.
+ */
+export type WebhookPostTargetStatus = 'draft' | 'scheduled' | 'queued' | 'publishing' | 'published' | 'partially_failed' | 'failed' | 'canceled';
+
+/**
+ * A platform user as the platform reported them. Every field is omitted when unknown.
+ */
+export type WebhookEventPerson = {
+    /**
+     * Platform user id.
+     */
+    id?: string;
+    /**
+     * Display name.
+     */
+    name?: string;
+    /**
+     * Handle without the leading @.
+     */
+    username?: string;
+};
+
+export type WebhookPostEventTarget = {
+    /**
+     * PostZen account id.
+     */
+    accountId: string;
+    /**
+     * The target account's profile. A post's targets can span profiles.
+     */
+    profileId: string;
+    platform: WebhookPlatform;
+    status: WebhookPostTargetStatus;
+    /**
+     * Public URL of the published post, when the platform returned one.
+     */
+    platformPostUrl?: string;
+    /**
+     * Present when the target failed.
+     */
+    errorCode?: string;
+};
+
+export type WebhookPostEventPost = {
+    /**
+     * PostZen post id.
+     */
+    id: string;
+    /**
+     * The post's primary profile.
+     */
+    profileId: string;
+    /**
+     * `scheduled` for post.scheduled, `canceled` for post.cancelled, otherwise the final publish outcome.
+     */
+    status: 'scheduled' | 'published' | 'partially_failed' | 'failed' | 'canceled';
+    /**
+     * Scheduled publish time, or null for a post that was published immediately. For post.cancelled, the time the post was scheduled for.
+     */
+    scheduledFor: string | null;
+    targets: Array<WebhookPostEventTarget>;
+    /**
+     * post.cancelled only. `deleted` when the post was deleted, `unscheduled` when it was moved back to a draft.
+     */
+    reason?: 'deleted' | 'unscheduled';
+};
+
+export type WebhookPostEventData = {
+    post: WebhookPostEventPost;
+};
+
+export type WebhookPostTargetEventPost = {
+    /**
+     * PostZen post id.
+     */
+    id: string;
+    /**
+     * The post's primary profile.
+     */
+    profileId: string;
+};
+
+export type WebhookPostTargetEventTarget = {
+    /**
+     * PostZen target id.
+     */
+    id: string;
+    /**
+     * PostZen account id.
+     */
+    accountId: string;
+    /**
+     * The target account's profile.
+     */
+    profileId: string;
+    platform: WebhookPlatform;
+    status: WebhookPostTargetStatus;
+    /**
+     * The platform's own id for the published post.
+     */
+    platformPostId?: string;
+    /**
+     * Public URL of the published post.
+     */
+    platformPostUrl?: string;
+    /**
+     * When the target was published.
+     */
+    publishedAt?: string;
+    /**
+     * Present when the target failed.
+     */
+    errorCode?: string;
+    /**
+     * Human-readable failure detail, when available.
+     */
+    errorMessage?: string;
+    /**
+     * Publish attempts made for this target so far.
+     */
+    attemptCount: number;
+};
+
+export type WebhookPostTargetEventData = {
+    post: WebhookPostTargetEventPost;
+    target: WebhookPostTargetEventTarget;
+};
+
+export type WebhookExternalPostEventExternalPost = {
+    /**
+     * PostZen external post id.
+     */
+    id: string;
+    /**
+     * PostZen account id.
+     */
+    accountId: string;
+    /**
+     * The account's profile.
+     */
+    profileId: string;
+    platform: WebhookPlatform;
+    /**
+     * The platform's own id for the post.
+     */
+    platformPostId: string;
+    /**
+     * Public URL of the post.
+     */
+    platformPostUrl?: string;
+    /**
+     * Post text, when the platform returned it.
+     */
+    content?: string;
+    /**
+     * When the post was published on the platform.
+     */
+    publishedAt: string;
+    /**
+     * Media type as the platform reported it.
+     */
+    mediaType?: string;
+};
+
+export type WebhookExternalPostEventData = {
+    externalPost: WebhookExternalPostEventExternalPost;
+};
+
+export type WebhookAccountEventAccount = {
+    /**
+     * PostZen account id.
+     */
+    id: string;
+    /**
+     * The account's profile.
+     */
+    profileId: string;
+    platform: WebhookPlatform;
+    /**
+     * Account username on the platform.
+     */
+    username: string;
+    status: 'connected' | 'needs_reauth' | 'disconnected';
+    /**
+     * `reconnected` on account.connected for an account that existed before. `user_disconnected` on account.disconnected when the user disconnected the account in the dashboard or deleted it through the API, `profile_deleted` when its profile was deleted. Omitted otherwise, including when the platform revoked access.
+     */
+    reason?: 'reconnected' | 'user_disconnected' | 'profile_deleted';
+};
+
+export type WebhookAccountEventData = {
+    account: WebhookAccountEventAccount;
+};
+
+export type WebhookAnalyticsSyncedEventAccount = {
+    /**
+     * PostZen account id.
+     */
+    id: string;
+    /**
+     * The account's profile.
+     */
+    profileId: string;
+    platform: WebhookPlatform;
+    /**
+     * Account username on the platform.
+     */
+    username: string;
+};
+
+export type WebhookAnalyticsSyncedEventData = {
+    account: WebhookAnalyticsSyncedEventAccount;
+    kind: 'metrics';
+    /**
+     * When the sync completed.
+     */
+    syncedAt: string;
+    /**
+     * Number of posts whose metrics were refreshed.
+     */
+    postsSynced: number;
+};
+
+export type WebhookMessageEventAttachment = {
+    id?: string;
+    type: 'image' | 'video' | 'audio' | 'file';
+    /**
+     * Platform-hosted URL. Meta expires these, so treat them as short-lived.
+     */
+    url: string;
+    previewUrl?: string;
+};
+
+export type WebhookMessageEventMessage = {
+    /**
+     * Platform message id.
+     */
+    id: string;
+    /**
+     * Platform conversation id, the `conversationId` the inbox endpoints accept. Omitted only for a comment automation's private reply when PostZen has not synced that conversation yet.
+     */
+    conversationId?: string;
+    /**
+     * PostZen account id.
+     */
+    accountId: string;
+    /**
+     * The account's profile.
+     */
+    profileId: string;
+    platform: WebhookPlatform;
+    /**
+     * `incoming` for message.received, `outgoing` for message.sent.
+     */
+    direction: 'incoming' | 'outgoing';
+    /**
+     * Message text, when present.
+     */
+    text?: string;
+    /**
+     * Omitted when the message has no attachments.
+     */
+    attachments?: Array<WebhookMessageEventAttachment>;
+    /**
+     * Platform id of the sender.
+     */
+    senderId?: string;
+    /**
+     * Display name of the sender.
+     */
+    senderName?: string;
+    /**
+     * When the message was sent.
+     */
+    createdAt: string;
+    /**
+     * True when the message replies to a story.
+     */
+    storyReply?: boolean;
+    /**
+     * True when the message is a story mention.
+     */
+    isStoryMention?: boolean;
+    /**
+     * `sync` for messages received from the platform; `dashboard`, `api`, or `automation` for messages sent through PostZen.
+     */
+    source: 'dashboard' | 'api' | 'automation' | 'sync';
+    /**
+     * Comment automation that sent the message. Present only when `source` is `automation`.
+     */
+    automationId?: string;
+    /**
+     * Platform id of the commenter the automation messaged. Present only when `source` is `automation`.
+     */
+    recipientId?: string;
+};
+
+export type WebhookMessageEventData = {
+    message: WebhookMessageEventMessage;
+};
+
+export type WebhookConversationEventConversation = {
+    /**
+     * Platform conversation id, the `conversationId` the inbox endpoints accept.
+     */
+    id: string;
+    /**
+     * PostZen account id.
+     */
+    accountId: string;
+    /**
+     * The account's profile.
+     */
+    profileId: string;
+    platform: WebhookPlatform;
+    participant: WebhookEventPerson;
+    /**
+     * Text of the latest message, when known.
+     */
+    lastMessage?: string;
+    /**
+     * When the latest message was sent.
+     */
+    lastMessageAt?: string;
+    /**
+     * Link to the conversation on the platform.
+     */
+    url?: string;
+};
+
+export type WebhookConversationEventData = {
+    conversation: WebhookConversationEventConversation;
+};
+
+export type WebhookCommentEventComment = {
+    /**
+     * Platform comment id.
+     */
+    id: string;
+    /**
+     * PostZen account id.
+     */
+    accountId: string;
+    /**
+     * The account's profile.
+     */
+    profileId: string;
+    platform: WebhookPlatform;
+    /**
+     * The platform's id for the post the comment is on.
+     */
+    platformPostId: string;
+    /**
+     * Present when the comment is a reply to another comment.
+     */
+    parentCommentId?: string;
+    /**
+     * Comment text.
+     */
+    text: string;
+    author: WebhookEventPerson;
+    /**
+     * When the comment was posted.
+     */
+    publishedAt: string;
+    /**
+     * Link to the comment on the platform.
+     */
+    permalink?: string;
+};
+
+export type WebhookCommentEventData = {
+    comment: WebhookCommentEventComment;
+};
+
+export type WebhookContactEventContact = {
+    /**
+     * PostZen contact id.
+     */
+    id: string;
+    /**
+     * The contact's profile.
+     */
+    profileId: string;
+    /**
+     * Contact name.
+     */
+    name: string;
+};
+
+export type WebhookContactTagEventData = {
+    contact: WebhookContactEventContact;
+    /**
+     * The tag that was added or removed.
+     */
+    tag: string;
+};
+
+export type WebhookContactFieldEventData = {
+    contact: WebhookContactEventContact;
+    /**
+     * Custom field key.
+     */
+    field: string;
+    /**
+     * Value before the change, or null when the field did not exist.
+     */
+    previousValue: boolean | null;
+    /**
+     * Value after the change, or null when the field was cleared or removed.
+     */
+    value: boolean | null;
+};
+
+export type WebhookTestEventData = {
+    /**
+     * The webhook endpoint being tested.
+     */
+    webhookEndpointId: string;
+    message: 'Test event from PostZen';
+};
+
+/**
+ * Envelope for `post.scheduled`, `post.published`, `post.partially_failed`, `post.failed`, `post.cancelled`.
+ */
+export type WebhookPostEvent = {
+    /**
+     * Event id (`evt_…`). Stable across automatic retries and manual redeliveries; deduplicate on it.
+     */
+    id: string;
+    type: 'post.scheduled' | 'post.published' | 'post.partially_failed' | 'post.failed' | 'post.cancelled';
+    /**
+     * Payload version.
+     */
+    apiVersion: string;
+    /**
+     * When the event was created.
+     */
+    createdAt: string;
+    data: WebhookPostEventData;
+};
+
+/**
+ * Envelope for `post.platform.published`, `post.platform.failed`.
+ */
+export type WebhookPostTargetEvent = {
+    /**
+     * Event id (`evt_…`). Stable across automatic retries and manual redeliveries; deduplicate on it.
+     */
+    id: string;
+    type: 'post.platform.published' | 'post.platform.failed';
+    /**
+     * Payload version.
+     */
+    apiVersion: string;
+    /**
+     * When the event was created.
+     */
+    createdAt: string;
+    data: WebhookPostTargetEventData;
+};
+
+/**
+ * Envelope for `post.external.created`.
+ */
+export type WebhookExternalPostEvent = {
+    /**
+     * Event id (`evt_…`). Stable across automatic retries and manual redeliveries; deduplicate on it.
+     */
+    id: string;
+    type: 'post.external.created';
+    /**
+     * Payload version.
+     */
+    apiVersion: string;
+    /**
+     * When the event was created.
+     */
+    createdAt: string;
+    data: WebhookExternalPostEventData;
+};
+
+/**
+ * Envelope for `account.connected`, `account.needs_reauth`, `account.disconnected`.
+ */
+export type WebhookAccountEvent = {
+    /**
+     * Event id (`evt_…`). Stable across automatic retries and manual redeliveries; deduplicate on it.
+     */
+    id: string;
+    type: 'account.connected' | 'account.needs_reauth' | 'account.disconnected';
+    /**
+     * Payload version.
+     */
+    apiVersion: string;
+    /**
+     * When the event was created.
+     */
+    createdAt: string;
+    data: WebhookAccountEventData;
+};
+
+/**
+ * Envelope for `analytics.synced`.
+ */
+export type WebhookAnalyticsSyncedEvent = {
+    /**
+     * Event id (`evt_…`). Stable across automatic retries and manual redeliveries; deduplicate on it.
+     */
+    id: string;
+    type: 'analytics.synced';
+    /**
+     * Payload version.
+     */
+    apiVersion: string;
+    /**
+     * When the event was created.
+     */
+    createdAt: string;
+    data: WebhookAnalyticsSyncedEventData;
+};
+
+/**
+ * Envelope for `conversation.started`.
+ */
+export type WebhookConversationEvent = {
+    /**
+     * Event id (`evt_…`). Stable across automatic retries and manual redeliveries; deduplicate on it.
+     */
+    id: string;
+    type: 'conversation.started';
+    /**
+     * Payload version.
+     */
+    apiVersion: string;
+    /**
+     * When the event was created.
+     */
+    createdAt: string;
+    data: WebhookConversationEventData;
+};
+
+/**
+ * Envelope for `message.received`, `message.sent`.
+ */
+export type WebhookMessageEvent = {
+    /**
+     * Event id (`evt_…`). Stable across automatic retries and manual redeliveries; deduplicate on it.
+     */
+    id: string;
+    type: 'message.received' | 'message.sent';
+    /**
+     * Payload version.
+     */
+    apiVersion: string;
+    /**
+     * When the event was created.
+     */
+    createdAt: string;
+    data: WebhookMessageEventData;
+};
+
+/**
+ * Envelope for `comment.received`.
+ */
+export type WebhookCommentEvent = {
+    /**
+     * Event id (`evt_…`). Stable across automatic retries and manual redeliveries; deduplicate on it.
+     */
+    id: string;
+    type: 'comment.received';
+    /**
+     * Payload version.
+     */
+    apiVersion: string;
+    /**
+     * When the event was created.
+     */
+    createdAt: string;
+    data: WebhookCommentEventData;
+};
+
+/**
+ * Envelope for `contact.tag_added`, `contact.tag_removed`.
+ */
+export type WebhookContactTagEvent = {
+    /**
+     * Event id (`evt_…`). Stable across automatic retries and manual redeliveries; deduplicate on it.
+     */
+    id: string;
+    type: 'contact.tag_added' | 'contact.tag_removed';
+    /**
+     * Payload version.
+     */
+    apiVersion: string;
+    /**
+     * When the event was created.
+     */
+    createdAt: string;
+    data: WebhookContactTagEventData;
+};
+
+/**
+ * Envelope for `contact.field_changed`.
+ */
+export type WebhookContactFieldEvent = {
+    /**
+     * Event id (`evt_…`). Stable across automatic retries and manual redeliveries; deduplicate on it.
+     */
+    id: string;
+    type: 'contact.field_changed';
+    /**
+     * Payload version.
+     */
+    apiVersion: string;
+    /**
+     * When the event was created.
+     */
+    createdAt: string;
+    data: WebhookContactFieldEventData;
+};
+
+/**
+ * Envelope for `webhook.test`.
+ */
+export type WebhookTestEvent = {
+    /**
+     * Event id (`evt_…`). Stable across automatic retries and manual redeliveries; deduplicate on it.
+     */
+    id: string;
+    type: 'webhook.test';
+    /**
+     * Payload version.
+     */
+    apiVersion: string;
+    /**
+     * When the event was created.
+     */
+    createdAt: string;
+    data: WebhookTestEventData;
+};
 
 export type WebhookDeliveryStatus = 'pending' | 'retrying' | 'delivered' | 'failed';
 
