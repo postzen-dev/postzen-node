@@ -1200,6 +1200,35 @@ export type InboxMessageAttachment = {
     previewUrl?: string;
 };
 
+export type InboxMessageTemplateButton = {
+    /**
+     * `url` opens `url` in a browser. `postback` is a reply button handled inside Instagram; its payload is never exposed.
+     */
+    type: 'url' | 'postback';
+    title: string;
+    /**
+     * Present on `url` buttons only.
+     */
+    url?: string;
+};
+
+export type InboxMessageTemplateElement = {
+    /**
+     * The card title, or the message text on a button-only template.
+     */
+    title: string;
+    subtitle?: string;
+    imageUrl?: string;
+    buttons?: Array<InboxMessageTemplateButton>;
+};
+
+export type InboxMessageTemplate = {
+    /**
+     * One element per card; more than one is a carousel.
+     */
+    elements: Array<InboxMessageTemplateElement>;
+};
+
 export type InboxMessage = {
     /**
      * Platform message id.
@@ -1220,6 +1249,10 @@ export type InboxMessage = {
     direction: 'incoming' | 'outgoing';
     createdAt: string;
     attachments?: Array<InboxMessageAttachment>;
+    /**
+     * Present on template messages (button templates, image cards) such as comment-automation DMs. A button-only template is one element whose title is the message text.
+     */
+    template?: InboxMessageTemplate;
     /**
      * Instagram only, and present only when the platform said so.
      */
