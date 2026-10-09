@@ -1472,6 +1472,15 @@ export type InstagramSettings = {
      * Reels only. Defaults to `true`. Set to `false` to keep the reel off the profile feed.
      */
     shareToFeed?: boolean;
+    /**
+     * Reels only. Publishes the reel as a trial reel, which Instagram shows to non-followers first. Sending it with any other `postType` returns a validation error. Trial reels are available only on public professional accounts that Instagram has made eligible; an ineligible account fails at publish time.
+     */
+    trialParams?: {
+        /**
+         * How the trial reel graduates to followers. `MANUAL`: the creator graduates it in the Instagram app. `SS_PERFORMANCE`: Instagram graduates it automatically when it performs well with non-followers. Case-sensitive.
+         */
+        graduationStrategy: 'MANUAL' | 'SS_PERFORMANCE';
+    };
 };
 
 export type FacebookSettings = {
