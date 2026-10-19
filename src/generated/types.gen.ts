@@ -1735,6 +1735,27 @@ export type ApiPostPlatformResult = {
     platformPostUrl?: string;
     error?: string;
     /**
+     * The platform's own error envelope for this failure, present only when the platform returned one (today: Instagram, Facebook, and Threads). Fields the platform did not send are absent. When PostZen stops retrying (`error` begins with "Publishing failed after too many attempts"), this is the last attempt's envelope.
+     */
+    platformError?: {
+        /**
+         * The platform's error code, for example Meta's `36003`.
+         */
+        code?: number;
+        /**
+         * The platform's error subcode, for example Meta's `2207009`.
+         */
+        subcode?: number;
+        /**
+         * Meta's trace id for the failed call. Quote it to Meta support; Meta expires it after a short time.
+         */
+        fbtraceId?: string;
+        /**
+         * The platform's error type, for example `OAuthException`.
+         */
+        type?: string;
+    };
+    /**
      * The per-platform content override this target was created with, if any.
      */
     customContent?: string;
@@ -1982,6 +2003,27 @@ export type WebhookPostTargetEventTarget = {
      * Human-readable failure detail, when available.
      */
     errorMessage?: string;
+    /**
+     * The platform's own error envelope for the failure (Meta's code, subcode, fbtrace_id, and type), present only when the platform returned one. Fields the platform did not send are absent.
+     */
+    platformError?: {
+        /**
+         * The platform's error code, for example Meta's `36003`.
+         */
+        code?: number;
+        /**
+         * The platform's error subcode, for example Meta's `2207009`.
+         */
+        subcode?: number;
+        /**
+         * Meta's trace id for the failed call. Quote it to Meta support; Meta expires it after a short time.
+         */
+        fbtraceId?: string;
+        /**
+         * The platform's error type, for example `OAuthException`.
+         */
+        type?: string;
+    };
     /**
      * Publish attempts made for this target so far.
      */
