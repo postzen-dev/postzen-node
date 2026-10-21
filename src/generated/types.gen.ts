@@ -1725,7 +1725,7 @@ export type ApiPostPlatformResult = {
     accountId: ApiPostAccount;
     status: 'draft' | 'scheduled' | 'pending' | 'publishing' | 'published' | 'failed' | 'canceled';
     /**
-     * The platform's own id for the published post. Present as soon as this target is published, so it can be used right away with the inbox and analytics endpoints. For a thread, this is the root post's id.
+     * The platform's own id for the published post. Present as soon as this target is published, so it can be used right away with the inbox and analytics endpoints. For a thread, this is the root post's id. TikTok is the exception: the id and platformPostUrl appear only once TikTok makes the post public, usually within a minute; a draft gets them when the creator posts it, and a photo post gets an id but no URL.
      */
     platformPostId?: string;
     /**
@@ -1984,11 +1984,11 @@ export type WebhookPostTargetEventTarget = {
     platform: WebhookPlatform;
     status: WebhookPostTargetStatus;
     /**
-     * The platform's own id for the published post.
+     * The platform's own id for the published post. For TikTok it is usually absent: the id appears on the post only once TikTok makes it public, usually within a minute, so fetch the post to read it.
      */
     platformPostId?: string;
     /**
-     * Public URL of the published post.
+     * Public URL of the published post. For TikTok it arrives with platformPostId, and photo posts get none.
      */
     platformPostUrl?: string;
     /**
