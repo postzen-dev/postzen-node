@@ -23,7 +23,7 @@ Requires Node 18+. Ships CommonJS and ESM builds with TypeScript declarations, a
 
 ## Quick Start
 
-Create an API key on the [API keys page](https://app.postzen.dev/api-keys) and expose it as `POSTZEN_API_KEY`:
+Create an API key on the [API keys page](https://app.postzen.dev/api-keys?utm_source=npm&utm_medium=readme&utm_campaign=postzen-node) and expose it as `POSTZEN_API_KEY`:
 
 ```bash
 export POSTZEN_API_KEY="pzn_live_..."
@@ -341,7 +341,7 @@ Error classes:
 ## Requirements
 
 - Node.js 18 or later
-- A PostZen API key ([create one](https://app.postzen.dev/api-keys))
+- A PostZen API key ([create one](https://app.postzen.dev/api-keys?utm_source=npm&utm_medium=readme&utm_campaign=postzen-node))
 
 ## PostZen developer tools
 
@@ -350,7 +350,7 @@ Error classes:
 - [Python SDK](https://github.com/postzen-dev/postzen-python) — `postzen-sdk` on PyPI
 - [CLI](https://github.com/postzen-dev/postzen-cli) — `@postzen/cli`
 - [MCP server](https://docs.postzen.dev/mcp)
-- [Dashboard & API keys](https://app.postzen.dev/api-keys)
+- [Dashboard & API keys](https://app.postzen.dev/api-keys?utm_source=npm&utm_medium=readme&utm_campaign=postzen-node)
 
 ## License
 
