@@ -3968,11 +3968,15 @@ export type CreateConnectUrlData = {
          */
         platform: PublicPlatformInput;
     };
-    query: {
+    query?: {
         /**
-         * PostZen profile id to attach the connected account to.
+         * PostZen profile id to attach a new account to. Required unless `accountId` is set; when both are set they must agree.
          */
-        profileId: string;
+        profileId?: string;
+        /**
+         * Reauthorize an existing account instead of connecting a new one. The account keeps its id, profile, scheduled posts and comment automations. The platform in the path must match the account's platform. Use this when an account's status is `needsReauth`.
+         */
+        accountId?: string;
         /**
          * Custom URL PostZen redirects to after the connection completes.
          */

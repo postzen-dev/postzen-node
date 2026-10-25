@@ -249,6 +249,8 @@ export const selectPinterestBoard = <ThrowOnError extends boolean = false>(optio
  * For `bluesky`, the returned `authUrl` is a PostZen-hosted page where the user enters their Bluesky handle and app password (no developer app or OAuth redirect is required); the connection completes when they submit that form.
  *
  * For `telegram`, the returned `authUrl` is a PostZen-hosted page that issues a short-lived access code (there is no OAuth grant and no Telegram authorization screen); the connection completes when the user adds @PostZenScheduleBot as an administrator of a channel or group and sends that code to the bot.
+ *
+ * To reauthorize an existing account, pass `accountId` instead of `profileId`. The flow is pinned to that account: the user must authorize the same provider account, and the account keeps its id, profile, scheduled posts and comment automations. Reauthorizing an account whose status is `connected` or `needsReauth` does not count against your plan's included accounts. Disconnecting and connecting again instead creates a new account id and cancels the account's pending posts, so prefer `accountId`.
  */
 export const createConnectUrl = <ThrowOnError extends boolean = false>(options: Options<CreateConnectUrlData, ThrowOnError>) => {
     return (options.client ?? _heyApiClient).get<CreateConnectUrlResponses, CreateConnectUrlErrors, ThrowOnError>({
