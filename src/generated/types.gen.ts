@@ -1586,6 +1586,10 @@ export type TikTokSettings = {
     uploadAsDraft?: boolean;
     brandContentToggle?: boolean;
     brandOrganicToggle?: boolean;
+    /**
+     * Marks the post as AI-generated. TikTok labels it "Creator labeled as AI-generated", which TikTok's Community Guidelines require for realistic AI-made video, images, or audio. Sent as `post_info.is_aigc` on video posts and as the top-level `is_aigc` field on photo posts. The label cannot be added or removed after the post is published, and TikTok's inbox endpoint has no such field, so it is ignored when `uploadAsDraft` is true: set the label in the TikTok app instead. Also accepted as `is_aigc` and `aiGenerated`.
+     */
+    isAigc?: boolean;
 };
 
 /**

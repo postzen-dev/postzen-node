@@ -347,7 +347,7 @@ export const uploadMediaDirect = <ThrowOnError extends boolean = false>(options:
  * | `youtube_title`, `youtube_description` | YouTube title and description override. |
  * | `facebook_first_comment`, `linkedin_first_comment` | First comments. |
  * | `instagram_content_type`, `instagram_collaborators`, `instagram_first_comment` | Instagram post type, collaborators, and first comment. |
- * | `tiktok_privacy`, `tiktok_allow_comments`, `tiktok_allow_duet`, `tiktok_allow_stitch`, `tiktok_brand_partner`, `tiktok_organic_brand`, `tiktok_draft`, `tiktok_description` | TikTok publishing options. |
+ * | `tiktok_privacy`, `tiktok_allow_comments`, `tiktok_allow_duet`, `tiktok_allow_stitch`, `tiktok_brand_partner`, `tiktok_organic_brand`, `tiktok_ai_generated`, `tiktok_draft`, `tiktok_description` | TikTok publishing options. |
  * | `telegram_parse_mode`, `telegram_disable_web_page_preview`, `telegram_disable_notification`, `telegram_protect_content` | Telegram publishing options. |
  * | `pinterest_title`, `pinterest_link`, `pinterest_board_id`, `pinterest_cover_image_url`, `pinterest_cover_image_key_frame_time` | Pinterest pin options, including alternative video cover selections. |
  */
