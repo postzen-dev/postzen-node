@@ -244,7 +244,7 @@ export type CommentAutomationLog = {
     commenterId: string;
     commenterName?: string;
     commentText?: string;
-    skipReason?: 'already_sent_to_contact' | 'automation_inactive' | 'not_follower' | 'is_follower' | 'below_min_followers' | 'follow_status_unknown' | 'contact_blocked' | 'contact_unsubscribed';
+    skipReason?: 'already_sent_to_contact' | 'automation_inactive' | 'not_follower' | 'is_follower' | 'below_min_followers' | 'follow_status_unknown' | 'contact_blocked' | 'contact_unsubscribed' | 'plan_limit';
     error?: string;
     sentMessageId?: string;
     commentReplyError?: string;
