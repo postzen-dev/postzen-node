@@ -832,7 +832,7 @@ export const previewQueue = <ThrowOnError extends boolean = false>(options: Opti
 
 /**
  * Get post analytics
- * Returns one post when `postId` is supplied. Otherwise returns a paginated analytics list with aggregate overview metrics.
+ * Returns one post when `postId` is supplied. Otherwise returns a paginated analytics list with aggregate overview metrics. Instagram Reels also report `skipRate` (percentage of initial views that skipped within the first 3 seconds), `avgWatchTimeMs` and `totalWatchTimeMs`.
  */
 export const getAnalytics = <ThrowOnError extends boolean = false>(options?: Options<GetAnalyticsData, ThrowOnError>) => {
     return (options?.client ?? _heyApiClient).get<GetAnalyticsResponses, GetAnalyticsErrors, ThrowOnError>({

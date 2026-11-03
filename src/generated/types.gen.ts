@@ -420,6 +420,18 @@ export type AnalyticsMetrics = AnalyticsMetricTotals & {
      * Interactions (likes + comments + shares + saves + clicks) divided by impressions, multiplied by 100 and rounded to two decimals. On platforms that report no impressions, such as Bluesky, the value is the interaction count multiplied by 100 and is not a rate.
      */
     engagementRate: number;
+    /**
+     * Instagram Reels only. The percentage (0 to 100) of initial views that skipped the Reel within its first 3 seconds, as estimated by Instagram. Omitted for every other post and until Instagram reports it. A later sync that cannot read it keeps the last reading, so it can be older than `lastUpdated`. On a post-level object, present only when the post has a single platform entry, because rates cannot be summed across accounts.
+     */
+    skipRate?: number;
+    /**
+     * Instagram Reels only. Average time spent playing the Reel, in milliseconds. Omitted and carried over under the same conditions as `skipRate`.
+     */
+    avgWatchTimeMs?: number;
+    /**
+     * Instagram Reels only. Total time spent playing the Reel across all plays, including replays, in milliseconds. Omitted and carried over under the same conditions as `skipRate`.
+     */
+    totalWatchTimeMs?: number;
     lastUpdated: string | null;
 };
 
