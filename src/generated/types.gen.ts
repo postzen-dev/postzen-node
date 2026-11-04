@@ -77,6 +77,14 @@ export type CommentAutomation = {
      */
     openingDm: CommentAutomationOpeningDm;
     followGate?: CommentAutomationFollowGate;
+    /**
+     * The email capture step with defaults filled in, or null when off.
+     */
+    emailCapture: CommentAutomationEmailCapture;
+    /**
+     * The follow-up DM with defaults filled in, or null when off.
+     */
+    followUp: CommentAutomationFollowUp;
 };
 
 export type CommentAutomationButton = {
@@ -161,6 +169,14 @@ export type CommentAutomationCreateRequest = {
      */
     openingDm?: CommentAutomationOpeningDm;
     followGate?: CommentAutomationFollowGate;
+    /**
+     * Send an object (even `{}` for the defaults) to ask for the person's email before the link. Omit to leave it off. Turns the Opening DM on for comments when it is absent. Requires the `automation-email-follow-up` feature on your account; otherwise `400 unsupported`.
+     */
+    emailCapture?: CommentAutomationEmailCapture;
+    /**
+     * Send an object (even `{}` for the defaults) to send a follow-up DM to people who have not replied after the link. Omit to leave it off. Turns the Opening DM on for comments when it is absent. Requires the `automation-email-follow-up` feature on your account; otherwise `400 unsupported`.
+     */
+    followUp?: CommentAutomationFollowUp;
 };
 
 /**
@@ -235,6 +251,14 @@ export type CommentAutomationUpdateRequest = {
      */
     openingDm?: CommentAutomationOpeningDm;
     followGate?: CommentAutomationFollowGate;
+    /**
+     * Send an object (even `{}` for the defaults) to turn email capture on, or null to turn it off. Requires the `automation-email-follow-up` feature on your account; otherwise `400 unsupported`.
+     */
+    emailCapture?: CommentAutomationEmailCapture;
+    /**
+     * Send an object (even `{}` for the defaults) to turn the follow-up DM on, or null to turn it off. Requires the `automation-email-follow-up` feature on your account; otherwise `400 unsupported`.
+     */
+    followUp?: CommentAutomationFollowUp;
 };
 
 export type CommentAutomationLog = {
@@ -250,7 +274,7 @@ export type CommentAutomationLog = {
     commentReplyError?: string;
     source: 'comment' | 'story_reply';
     /**
-     * gated: a button DM (Opening DM or follow request) went out and we are waiting for the tap; it flips to sent or skipped when they tap. A tap from someone who still does not follow keeps it gated for another tap.
+     * gated: a button DM (Opening DM or follow request) or the email ask went out and we are waiting for the tap or reply; it flips to sent or skipped when they tap or reply. A tap from someone who still does not follow keeps it gated for another tap.
      */
     status: 'pending' | 'sent' | 'failed' | 'skipped' | 'gated';
     buttonsDropped?: boolean;
@@ -259,9 +283,9 @@ export type CommentAutomationLog = {
     createdAt: string;
     updatedAt: string;
     /**
-     * Which button DM a gated log is waiting on: `opening` (the Opening DM) or `follow` (the follow request).
+     * Which step a gated log is waiting on: `opening` (the Opening DM tap), `follow` (the follow request tap) or `email` (a reply to the email ask).
      */
-    gateStage?: 'opening' | 'follow';
+    gateStage?: 'opening' | 'follow' | 'email';
     gateMessageId?: string;
     commenterIgsid?: string;
     /**
@@ -282,6 +306,27 @@ export type CommentAutomationLog = {
      * Meta rejected the Opening DM template and delivery failed open: the DM was sent without the audience check.
      */
     gateDropped?: boolean;
+    /**
+     * Email asks sent (the first ask plus retries).
+     */
+    emailAttempts?: number;
+    /**
+     * The email address read from the person's reply, lowercased.
+     */
+    capturedEmail?: string;
+    emailCapturedAt?: string;
+    /**
+     * Retries ran out without an email address; the link DM went out anyway.
+     */
+    emailSkipped?: boolean;
+    followUpStatus?: 'pending' | 'sent' | 'failed' | 'skipped';
+    followUpDueAt?: string;
+    followUpMessageId?: string;
+    followUpError?: string;
+    /**
+     * Why the follow-up was not sent: `replied` (they replied after the link), `window_closed` (Instagram's 24-hour window closed), `automation_inactive` (the automation was paused or deleted) or `follow_up_removed` (the follow-up was turned off).
+     */
+    followUpSkipReason?: 'replied' | 'window_closed' | 'automation_inactive' | 'follow_up_removed';
 };
 
 export type CommentAutomationListResponse = {
@@ -3030,6 +3075,38 @@ export type CommentAutomationFollowGate = {
      * Sent when they tap the follow request button but still do not follow. The button stays, so they can follow and tap again.
      */
     notFollowingMessage?: string;
+};
+
+/**
+ * Ask for the person's email before the link. The ask is a plain DM; the reply is read for an email address, which is saved on the contact, and the link DM follows. Up to two retries (`retryMessage`) when a reply carries no email; after that the link is sent anyway. Requires the Opening DM on comments (forced on when absent). An object, even `{}`, turns it on with the defaults; on PATCH, `null` turns it off.
+ */
+export type CommentAutomationEmailCapture = {
+    /**
+     * The email ask. Trimmed. Empty or omitted uses the default.
+     */
+    message?: string;
+    /**
+     * Sent when a reply carries no email address, up to two times. Trimmed. Empty or omitted uses the default.
+     */
+    retryMessage?: string;
+};
+
+/**
+ * A second DM sent `delaySeconds` after the link DM to people who have not replied since. PostZen does not track link clicks, so a reply is the signal that they engaged. Sent as a normal message inside Instagram's 24-hour window, so it needs the Opening DM on comments (forced on when absent) and is skipped when the window has closed. An object, even `{}`, turns it on with the defaults; on PATCH, `null` turns it off.
+ */
+export type CommentAutomationFollowUp = {
+    /**
+     * Trimmed. Empty or omitted uses the default. At most 640 characters when `buttons` is non-empty.
+     */
+    message?: string;
+    /**
+     * Seconds after the link DM before the follow-up is sent (60 seconds to 23 hours).
+     */
+    delaySeconds?: number;
+    /**
+     * URL buttons on the follow-up, same rules as `buttons`.
+     */
+    buttons?: Array<CommentAutomationButton>;
 };
 
 /**

@@ -7515,7 +7515,9 @@
 					"createdAt",
 					"updatedAt",
 					"audience",
-					"openingDm"
+					"openingDm",
+					"emailCapture",
+					"followUp"
 				],
 				"properties": {
 					"accountId": {
@@ -7716,6 +7718,24 @@
 					},
 					"followGate": {
 						"$ref": "#/components/schemas/CommentAutomationFollowGate"
+					},
+					"emailCapture": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/CommentAutomationEmailCapture"
+							}
+						],
+						"nullable": true,
+						"description": "The email capture step with defaults filled in, or null when off."
+					},
+					"followUp": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/CommentAutomationFollowUp"
+							}
+						],
+						"nullable": true,
+						"description": "The follow-up DM with defaults filled in, or null when off."
 					}
 				}
 			},
@@ -7906,6 +7926,22 @@
 					},
 					"followGate": {
 						"$ref": "#/components/schemas/CommentAutomationFollowGate"
+					},
+					"emailCapture": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/CommentAutomationEmailCapture"
+							}
+						],
+						"description": "Send an object (even `{}` for the defaults) to ask for the person's email before the link. Omit to leave it off. Turns the Opening DM on for comments when it is absent. Requires the `automation-email-follow-up` feature on your account; otherwise `400 unsupported`."
+					},
+					"followUp": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/CommentAutomationFollowUp"
+							}
+						],
+						"description": "Send an object (even `{}` for the defaults) to send a follow-up DM to people who have not replied after the link. Omit to leave it off. Turns the Opening DM on for comments when it is absent. Requires the `automation-email-follow-up` feature on your account; otherwise `400 unsupported`."
 					}
 				},
 				"additionalProperties": false,
@@ -8082,6 +8118,24 @@
 							}
 						],
 						"nullable": true
+					},
+					"emailCapture": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/CommentAutomationEmailCapture"
+							}
+						],
+						"nullable": true,
+						"description": "Send an object (even `{}` for the defaults) to turn email capture on, or null to turn it off. Requires the `automation-email-follow-up` feature on your account; otherwise `400 unsupported`."
+					},
+					"followUp": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/CommentAutomationFollowUp"
+							}
+						],
+						"nullable": true,
+						"description": "Send an object (even `{}` for the defaults) to turn the follow-up DM on, or null to turn it off. Requires the `automation-email-follow-up` feature on your account; otherwise `400 unsupported`."
 					}
 				},
 				"additionalProperties": false,
@@ -8156,7 +8210,7 @@
 							"skipped",
 							"gated"
 						],
-						"description": "gated: a button DM (Opening DM or follow request) went out and we are waiting for the tap; it flips to sent or skipped when they tap. A tap from someone who still does not follow keeps it gated for another tap."
+						"description": "gated: a button DM (Opening DM or follow request) or the email ask went out and we are waiting for the tap or reply; it flips to sent or skipped when they tap or reply. A tap from someone who still does not follow keeps it gated for another tap."
 					},
 					"buttonsDropped": {
 						"type": "boolean"
@@ -8186,9 +8240,10 @@
 						"type": "string",
 						"enum": [
 							"opening",
-							"follow"
+							"follow",
+							"email"
 						],
-						"description": "Which button DM a gated log is waiting on: `opening` (the Opening DM) or `follow` (the follow request)."
+						"description": "Which step a gated log is waiting on: `opening` (the Opening DM tap), `follow` (the follow request tap) or `email` (a reply to the email ask)."
 					},
 					"gateMessageId": {
 						"type": "string"
@@ -8224,6 +8279,53 @@
 					"gateDropped": {
 						"type": "boolean",
 						"description": "Meta rejected the Opening DM template and delivery failed open: the DM was sent without the audience check."
+					},
+					"emailAttempts": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 3,
+						"description": "Email asks sent (the first ask plus retries)."
+					},
+					"capturedEmail": {
+						"type": "string",
+						"description": "The email address read from the person's reply, lowercased."
+					},
+					"emailCapturedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"emailSkipped": {
+						"type": "boolean",
+						"description": "Retries ran out without an email address; the link DM went out anyway."
+					},
+					"followUpStatus": {
+						"type": "string",
+						"enum": [
+							"pending",
+							"sent",
+							"failed",
+							"skipped"
+						]
+					},
+					"followUpDueAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"followUpMessageId": {
+						"type": "string"
+					},
+					"followUpError": {
+						"type": "string"
+					},
+					"followUpSkipReason": {
+						"type": "string",
+						"enum": [
+							"replied",
+							"window_closed",
+							"automation_inactive",
+							"follow_up_removed"
+						],
+						"description": "Why the follow-up was not sent: `replied` (they replied after the link), `window_closed` (Instagram's 24-hour window closed), `automation_inactive` (the automation was paused or deleted) or `follow_up_removed` (the follow-up was turned off)."
 					}
 				}
 			},
@@ -14359,6 +14461,57 @@
 						"maxLength": 1000,
 						"description": "Sent when they tap the follow request button but still do not follow. The button stays, so they can follow and tap again.",
 						"default": "Looks like you're not following yet. Follow us, then tap the button again."
+					}
+				}
+			},
+			"CommentAutomationEmailCapture": {
+				"type": "object",
+				"additionalProperties": false,
+				"description": "Ask for the person's email before the link. The ask is a plain DM; the reply is read for an email address, which is saved on the contact, and the link DM follows. Up to two retries (`retryMessage`) when a reply carries no email; after that the link is sent anyway. Requires the Opening DM on comments (forced on when absent). An object, even `{}`, turns it on with the defaults; on PATCH, `null` turns it off.",
+				"properties": {
+					"message": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 1000,
+						"default": "What's the best email to send it to? Reply with it and the link follows 📧",
+						"description": "The email ask. Trimmed. Empty or omitted uses the default."
+					},
+					"retryMessage": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 1000,
+						"default": "Hmm, that doesn't look like an email address. Could you type it again?",
+						"description": "Sent when a reply carries no email address, up to two times. Trimmed. Empty or omitted uses the default."
+					}
+				}
+			},
+			"CommentAutomationFollowUp": {
+				"type": "object",
+				"additionalProperties": false,
+				"description": "A second DM sent `delaySeconds` after the link DM to people who have not replied since. PostZen does not track link clicks, so a reply is the signal that they engaged. Sent as a normal message inside Instagram's 24-hour window, so it needs the Opening DM on comments (forced on when absent) and is skipped when the window has closed. An object, even `{}`, turns it on with the defaults; on PATCH, `null` turns it off.",
+				"properties": {
+					"message": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 1000,
+						"default": "Hey! Just checking in. Did the link come through? Here it is again 👇",
+						"description": "Trimmed. Empty or omitted uses the default. At most 640 characters when `buttons` is non-empty."
+					},
+					"delaySeconds": {
+						"type": "integer",
+						"minimum": 60,
+						"maximum": 82800,
+						"default": 3600,
+						"description": "Seconds after the link DM before the follow-up is sent (60 seconds to 23 hours)."
+					},
+					"buttons": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/CommentAutomationButton"
+						},
+						"maxItems": 3,
+						"default": [],
+						"description": "URL buttons on the follow-up, same rules as `buttons`."
 					}
 				}
 			},
