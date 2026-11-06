@@ -2,7 +2,7 @@
 
 export type CommentAutomation = {
     /**
-     * Connected Instagram account id. Immutable after creation.
+     * Connected Instagram account or Facebook Page id. Immutable after creation.
      */
     accountId: string;
     /**
@@ -13,13 +13,16 @@ export type CommentAutomation = {
      * Trimmed name.
      */
     name: string;
+    /**
+     * story_reply is Instagram only; a Facebook automation returns 400 unsupported.
+     */
     trigger: 'comment' | 'story_reply';
     /**
-     * Instagram media or story id. Mutually exclusive with postId; omit both for account-wide matching.
+     * Instagram media or story id, or Facebook post id (`{pageId}_{postId}`; the bare post id matches too). Mutually exclusive with postId; omit both for account-wide matching.
      */
     platformPostId?: string;
     /**
-     * Owned PostZen post with an Instagram target on this account. Resolves providerPostId at match time, including posts not yet published. Mutually exclusive with platformPostId.
+     * Owned PostZen post with a target on this account's platform. Resolves providerPostId at match time, including posts not yet published. Mutually exclusive with platformPostId.
      */
     postId?: string;
     postTitle?: string;
@@ -62,7 +65,7 @@ export type CommentAutomation = {
     isActive: boolean;
     linkTracking: false;
     id: string;
-    platform: 'instagram';
+    platform: 'instagram' | 'facebook';
     alsoMatchInDms: false;
     stats: {
         totalTriggered: number;
@@ -77,6 +80,10 @@ export type CommentAutomation = {
      */
     openingDm: CommentAutomationOpeningDm;
     followGate?: CommentAutomationFollowGate;
+    /**
+     * Both flags are always present; false when off.
+     */
+    actions: CommentAutomationActions;
 };
 
 export type CommentAutomationButton = {
@@ -89,11 +96,25 @@ export type CommentAutomationButton = {
 };
 
 /**
- * Maximum 100 automations per user; at most one active per-post automation for each account and post reference. alsoMatchInDms, clickTag and linkTracking:true return 400 unsupported. Instagram only. A comment permits one private reply ever, within 7 days. Story replies use normal DMs inside the 24-hour messaging window. Buttons and image cards (template) fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages.
+ * Extra actions on the matched comment. They run once, after the first DM attempt for the comment, never change the DM's outcome, and record their own outcome on the log as likeStatus and hideStatus.
+ */
+export type CommentAutomationActions = {
+    /**
+     * Like the comment as the Page. Facebook only: true on an Instagram automation returns 400 unsupported.
+     */
+    likeComment?: boolean;
+    /**
+     * Hide the comment, so only its author still sees it.
+     */
+    hideComment?: boolean;
+};
+
+/**
+ * Maximum 100 automations per user; at most one active per-post automation for each account and post reference. alsoMatchInDms, clickTag and linkTracking:true return 400 unsupported. On a Facebook Page, trigger story_reply, audience and followGate also return 400 unsupported; actions.likeComment is Facebook only. Instagram accounts and Facebook Pages. A comment permits one private reply ever, within 7 days. Story replies (Instagram only) use normal DMs inside the 24-hour messaging window. Buttons and image cards (template) fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages on Instagram, or pages_messaging and pages_manage_metadata on a Facebook Page (plus pages_manage_engagement when commentReply is set).
  */
 export type CommentAutomationCreateRequest = {
     /**
-     * Connected Instagram account id. Immutable after creation.
+     * Connected Instagram account or Facebook Page id. Immutable after creation.
      */
     accountId: string;
     /**
@@ -104,13 +125,16 @@ export type CommentAutomationCreateRequest = {
      * Trimmed name.
      */
     name: string;
+    /**
+     * story_reply is Instagram only; a Facebook automation returns 400 unsupported.
+     */
     trigger?: 'comment' | 'story_reply';
     /**
-     * Instagram media or story id. Mutually exclusive with postId; omit both for account-wide matching.
+     * Instagram media or story id, or Facebook post id (`{pageId}_{postId}`; the bare post id matches too). Mutually exclusive with postId; omit both for account-wide matching.
      */
     platformPostId?: string;
     /**
-     * Owned PostZen post with an Instagram target on this account. Resolves providerPostId at match time, including posts not yet published. Mutually exclusive with platformPostId.
+     * Owned PostZen post with a target on this account's platform. Resolves providerPostId at match time, including posts not yet published. Mutually exclusive with platformPostId.
      */
     postId?: string;
     postTitle?: string;
@@ -155,12 +179,19 @@ export type CommentAutomationCreateRequest = {
     commentReplyDelaySeconds?: number;
     isActive?: boolean;
     linkTracking?: false;
+    /**
+     * Instagram only: a Facebook automation returns 400 unsupported.
+     */
     audience?: CommentAutomationAudience;
     /**
      * Send an object (even `{}` for the defaults) to turn the Opening DM on. Omit to leave it off, unless `audience` filters by followers.
      */
     openingDm?: CommentAutomationOpeningDm;
+    /**
+     * Instagram only: a Facebook automation returns 400 unsupported.
+     */
     followGate?: CommentAutomationFollowGate;
+    actions?: CommentAutomationActions;
 };
 
 /**
@@ -175,13 +206,16 @@ export type CommentAutomationUpdateRequest = {
      * Trimmed name.
      */
     name?: string;
+    /**
+     * story_reply is Instagram only; a Facebook automation returns 400 unsupported.
+     */
     trigger?: 'comment' | 'story_reply';
     /**
-     * Instagram media or story id. Mutually exclusive with postId; omit both for account-wide matching.
+     * Instagram media or story id, or Facebook post id (`{pageId}_{postId}`; the bare post id matches too). Mutually exclusive with postId; omit both for account-wide matching.
      */
     platformPostId?: string;
     /**
-     * Owned PostZen post with an Instagram target on this account. Resolves providerPostId at match time, including posts not yet published. Mutually exclusive with platformPostId.
+     * Owned PostZen post with a target on this account's platform. Resolves providerPostId at match time, including posts not yet published. Mutually exclusive with platformPostId.
      */
     postId?: string;
     postTitle?: string;
@@ -229,17 +263,30 @@ export type CommentAutomationUpdateRequest = {
     commentReplyDelaySeconds?: number;
     isActive?: boolean;
     linkTracking?: false;
+    /**
+     * Instagram only: a Facebook automation returns 400 unsupported. On PATCH, null clears it.
+     */
     audience?: CommentAutomationAudience;
     /**
      * Send null to turn the Opening DM off. A follower-based `audience` still sends the defaults.
      */
     openingDm?: CommentAutomationOpeningDm;
+    /**
+     * Instagram only: a Facebook automation returns 400 unsupported. On PATCH, null clears it.
+     */
     followGate?: CommentAutomationFollowGate;
+    /**
+     * Replaces the stored actions. Send null to turn both off.
+     */
+    actions?: CommentAutomationActions;
 };
 
 export type CommentAutomationLog = {
     id: string;
     commentId: string;
+    /**
+     * Instagram media or story id, or Facebook post id, the comment was on.
+     */
     platformPostId?: string;
     commenterId: string;
     commenterName?: string;
@@ -263,6 +310,9 @@ export type CommentAutomationLog = {
      */
     gateStage?: 'opening' | 'follow';
     gateMessageId?: string;
+    /**
+     * Messaging id of the commenter: the Instagram-scoped id on Instagram, the Page-scoped id (PSID) on Facebook.
+     */
     commenterIgsid?: string;
     /**
      * Unix timestamp in milliseconds.
@@ -282,6 +332,22 @@ export type CommentAutomationLog = {
      * Meta rejected the Opening DM template and delivery failed open: the DM was sent without the audience check.
      */
     gateDropped?: boolean;
+    /**
+     * Outcome of actions.likeComment. Absent when the action is off.
+     */
+    likeStatus?: 'done' | 'failed' | 'skipped';
+    /**
+     * Why liking the comment failed.
+     */
+    likeError?: string;
+    /**
+     * Outcome of actions.hideComment. Absent when the action is off.
+     */
+    hideStatus?: 'done' | 'failed' | 'skipped';
+    /**
+     * Why hiding the comment failed.
+     */
+    hideError?: string;
 };
 
 export type CommentAutomationListResponse = {
@@ -628,7 +694,7 @@ export type PaymentRequiredError = {
      */
     error: string;
     code: 'paymentRequired';
-    reason: 'freeTierExceeded' | 'xRequiresPaymentMethod' | 'accountPaused' | 'freePostLimitExceeded';
+    reason: 'freeTierExceeded' | 'xRequiresPaymentMethod' | 'accountPaused' | 'freePostLimitExceeded' | 'freeInboxSendLimitExceeded';
     documentationUrl: string;
     dashboardUrl: string;
     /**
@@ -866,7 +932,7 @@ export type RateLimitError = {
  */
 export type InboxComment = {
     /**
-     * Platform comment id. Pass it as `commentId` to the reply, delete, and hide endpoints.
+     * Platform comment id. Pass it as `commentId` to the reply, delete, hide, like, and private-reply endpoints.
      */
     id: string;
     /**
@@ -931,9 +997,36 @@ export type InboxComment = {
      */
     isHidden: boolean;
     /**
+     * True when the connected account can like this comment. Only Facebook Pages can, so it is always false on Instagram and Threads.
+     */
+    canLike: boolean;
+    /**
+     * Facebook only: true when the connected Page itself likes the comment. Absent when the platform did not say.
+     */
+    isLiked?: boolean;
+    /**
+     * Present when the comment carries media or a shared link.
+     */
+    attachment?: InboxCommentAttachment;
+    /**
      * Comment this one replies to, or `null` when it is a top-level comment on the post.
      */
     parentId: string | null;
+};
+
+/**
+ * Media attached to a comment. The URLs are expiring Meta CDN links; read the comment again for a fresh one.
+ */
+export type InboxCommentAttachment = {
+    type: 'image' | 'video' | 'sticker' | 'gif' | 'share' | 'file';
+    /**
+     * Image, or a video's preview image, when the platform returned one.
+     */
+    imageUrl?: string;
+    /**
+     * The attachment itself or the shared link, when the platform returned one.
+     */
+    url?: string;
 };
 
 export type InboxCommentsResponse = {
@@ -1025,6 +1118,22 @@ export type InboxHideResponse = {
     platform: 'instagram' | 'facebook' | 'threads';
 };
 
+export type InboxLikeResponse = {
+    status: 'success';
+    /**
+     * Platform id of the comment.
+     */
+    commentId: string;
+    /**
+     * Whether the connected Page likes the comment after the call.
+     */
+    liked: boolean;
+    /**
+     * Platform the comment lives on.
+     */
+    platform: 'facebook';
+};
+
 /**
  * Acknowledgement returned by an inbox write that has nothing to return.
  */
@@ -1035,7 +1144,7 @@ export type InboxActionResponse = {
 
 export type InboxErrorResponse = ErrorResponse & {
     /**
-     * Machine-readable failure reason. PostZen's own reasons are `accountNotFound`, `forbidden`, `platformUnsupported`, `platformCapabilityMissing`, `connectionDead`, `postNotFound`, `postNotPublished`, `attachmentUnsupported`, and `publishPending` (Threads accepted the reply container but had not published it yet — the reply may still appear, so check the thread before retrying). Failures raised by the platform carry the platform's own error code instead, which for Meta is a numeric string such as `100` or `190`. Absent on plain parameter-validation errors and on PostZen's own rate-limit response.
+     * Machine-readable failure reason. PostZen's own reasons are `accountNotFound`, `forbidden`, `platformUnsupported`, `platformCapabilityMissing`, `connectionDead`, `postNotFound`, `postNotPublished`, `attachmentUnsupported`, `unsupported` (the platform has no API for this action, such as liking an Instagram comment), and `publishPending` (Threads accepted the reply container but had not published it yet — the reply may still appear, so check the thread before retrying). Failures raised by the platform carry the platform's own error code instead, which for Meta is a numeric string such as `100` or `190`. Absent on plain parameter-validation errors and on PostZen's own rate-limit response.
      */
     code?: string;
     /**
@@ -1056,7 +1165,7 @@ export type InboxConversation = {
     /**
      * Platform the thread lives on.
      */
-    platform: 'instagram';
+    platform: 'instagram' | 'facebook';
     /**
      * PostZen account id the thread belongs to.
      */
@@ -1066,7 +1175,7 @@ export type InboxConversation = {
      */
     accountUsername: string;
     /**
-     * The other party's platform id (the IGSID on Instagram). Absent when the platform did not name the participant.
+     * The other party's platform id: the IGSID on Instagram, the Page-scoped id (PSID) on Facebook. Absent when the platform did not name the participant.
      */
     participantId?: string;
     participantName?: string;
@@ -1098,7 +1207,7 @@ export type InboxConversation = {
      */
     unreadCount: number;
     /**
-     * Deep link into the platform's own inbox, when the platform reports one. Instagram has no equivalent, so it is currently always absent.
+     * Deep link into the platform's own inbox, when the platform reports one. Messenger threads carry one when Meta returns it; Instagram has no equivalent, so it is always absent there.
      */
     url?: string;
 };
@@ -1114,7 +1223,7 @@ export type InboxDmPagination = {
 export type InboxDmFailedAccount = {
     accountId: string;
     accountUsername: string;
-    platform: 'instagram';
+    platform: 'instagram' | 'facebook';
     /**
      * Why the refresh failed, in PostZen or the platform’s own words.
      */
@@ -1159,7 +1268,7 @@ export type InboxConversationSearchMatch = {
 export type InboxConversationSearchHit = {
     conversation: {
         id: string;
-        platform: 'instagram';
+        platform: 'instagram' | 'facebook';
         accountId: string;
         participantName?: string;
         participantUsername?: string;
@@ -1195,7 +1304,7 @@ export type InboxConversationUpdateResponse = {
         id: string;
         accountId: string;
         status: 'active' | 'archived';
-        platform: 'instagram';
+        platform: 'instagram' | 'facebook';
         updatedAt: string;
     };
 };
@@ -1215,6 +1324,13 @@ export type InboxConversationReadResponse = {
     markedCount: number;
 };
 
+export type InboxTypingResponse = {
+    /**
+     * True when Meta accepted the indicator. False when it declined or PostZen could not resolve the recipient; there is nothing to retry.
+     */
+    success: boolean;
+};
+
 export type InboxMessageAttachment = {
     id?: string;
     type: 'image' | 'video' | 'audio' | 'file';
@@ -1227,9 +1343,9 @@ export type InboxMessageAttachment = {
 
 export type InboxMessageTemplateButton = {
     /**
-     * `url` opens `url` in a browser. `postback` is a reply button handled inside Instagram; its payload is never exposed.
+     * `url` opens `url` in a browser. `postback` is a reply button; its payload is not exposed here, and a tap arrives as an incoming message carrying `postbackPayload`. `phone` (Facebook only) starts a call; the number is not exposed.
      */
-    type: 'url' | 'postback';
+    type: 'url' | 'postback' | 'phone';
     title: string;
     /**
      * Present on `url` buttons only.
@@ -1261,9 +1377,9 @@ export type InboxMessage = {
     id: string;
     conversationId: string;
     accountId: string;
-    platform: 'instagram';
+    platform: 'instagram' | 'facebook';
     /**
-     * Message text. Absent on an attachment-only message, and on older Instagram messages the platform no longer returns text for.
+     * Message text. Absent on an attachment-only message, and on older messages the platform no longer returns text for.
      */
     message?: string;
     senderId?: string;
@@ -1286,6 +1402,25 @@ export type InboxMessage = {
      * Instagram only, and present only when the platform said so.
      */
     isStoryMention?: boolean;
+    /**
+     * Reactions on a Facebook Messenger message. Meta reports them through notifications only, so they are present on messages that were reacted to while the Page was connected with Messenger access. `fromMe` is true for the connected Page's own reaction.
+     */
+    reactions?: Array<{
+        emoji: string;
+        fromMe: boolean;
+    }>;
+    /**
+     * Payload of the `postback` button the person tapped, when this message is that tap. Payloads PostZen uses for its own comment automations are never exposed.
+     */
+    postbackPayload?: string;
+    /**
+     * Payload of the quick reply the person tapped, when this message is that tap.
+     */
+    quickReplyPayload?: string;
+    /**
+     * When the sender last edited the message. Present only when the platform reported an edit.
+     */
+    editedAt?: string;
 };
 
 export type InboxMessagesResponse = {
@@ -1296,8 +1431,80 @@ export type InboxMessagesResponse = {
     lastUpdated: string;
 };
 
+export type InboxMessageQuickReply = {
+    /**
+     * Chip label. Trimmed.
+     */
+    title: string;
+    /**
+     * Sent back verbatim as `quickReplyPayload` on the person's next message when they tap the chip. Must not start with `pz:`, which is reserved.
+     */
+    payload: string;
+    /**
+     * Public HTTPS icon shown on the chip. Facebook only: Instagram quick replies are text only, and an `imageUrl` there answers `400 unsupported`.
+     */
+    imageUrl?: string;
+};
+
 /**
- * Exactly one of `message` or `attachmentUrl` is required. Meta’s Send API carries one payload per call, so the two cannot be combined — send two messages instead.
+ * A button under the message or a template card. `title` is 1 to 20 characters for every type.
+ */
+export type InboxMessageSendButton = {
+    type: 'url';
+    title: string;
+    /**
+     * Public HTTP(S) URL opened in a browser; private hosts and embedded credentials are rejected.
+     */
+    url: string;
+} | {
+    type: 'postback';
+    title: string;
+    /**
+     * Sent back verbatim as `postbackPayload` when the person taps the button. Must not start with `pz:`, which is reserved.
+     */
+    payload: string;
+} | {
+    type: 'phone';
+    title: string;
+    /**
+     * E.164 number to call, such as `+16505551234`. Facebook only: Instagram answers `400 unsupported`.
+     */
+    phone: string;
+};
+
+export type InboxMessageSendTemplateElement = {
+    /**
+     * Card title. Trimmed. A card needs at least one of `subtitle`, `imageUrl`, or a button besides its title.
+     */
+    title: string;
+    /**
+     * Optional line under the title.
+     */
+    subtitle?: string;
+    /**
+     * Public HTTPS image URL that Meta fetches.
+     */
+    imageUrl?: string;
+    /**
+     * Up to three buttons under the card.
+     */
+    buttons?: Array<InboxMessageSendButton>;
+};
+
+/**
+ * Meta generic template: one image card, or a swipeable carousel of up to ten. Sent on its own, without `message`, an attachment, `buttons` or `quickReplies`.
+ */
+export type InboxMessageSendTemplate = {
+    type: 'generic';
+    /**
+     * Facebook only: Instagram answers `400 unsupported`. Meta's default is `horizontal`.
+     */
+    imageAspectRatio?: 'horizontal' | 'square';
+    elements: Array<InboxMessageSendTemplateElement>;
+};
+
+/**
+ * Send exactly one body shape: `message` (optionally with `quickReplies` or `buttons`), `attachmentUrl` with `attachmentType`, or `template`. Meta's Send API carries one payload per call, so combining them is a 400 rather than a half-sent message.
  */
 export type InboxMessageSendRequest = {
     /**
@@ -1305,7 +1512,7 @@ export type InboxMessageSendRequest = {
      */
     accountId: string;
     /**
-     * Message text. Cannot be combined with `attachmentUrl`: Meta accepts one payload per call, so a request carrying both is rejected with a 400 rather than silently sending half of it.
+     * Message text. At most 1000 UTF-8 bytes on Instagram and 2000 characters on Facebook, or 640 characters when `buttons` are attached. Required with `quickReplies` or `buttons`; cannot be combined with `attachmentUrl` or `template`.
      */
     message?: string;
     /**
@@ -1316,6 +1523,26 @@ export type InboxMessageSendRequest = {
      * Required whenever `attachmentUrl` is set.
      */
     attachmentType?: 'image' | 'video' | 'audio' | 'file';
+    /**
+     * Tappable chips shown under `message`. Requires `message`; cannot be combined with `buttons` or `template`.
+     */
+    quickReplies?: Array<InboxMessageQuickReply>;
+    /**
+     * Buttons under `message`, sent as Meta's button template. Requires `message` (at most 640 characters); cannot be combined with `quickReplies` or `template`.
+     */
+    buttons?: Array<InboxMessageSendButton>;
+    /**
+     * Image card or carousel sent instead of text. Cannot be combined with `message`, `attachmentUrl`, `buttons` or `quickReplies`.
+     */
+    template?: InboxMessageSendTemplate;
+    /**
+     * Meta's `messaging_type`. Facebook sends `RESPONSE` when it is omitted; Instagram sends none unless you set it. `MESSAGE_TAG` requires `messageTag`.
+     */
+    messagingType?: 'RESPONSE' | 'UPDATE' | 'MESSAGE_TAG';
+    /**
+     * Requires `messagingType: MESSAGE_TAG`. `HUMAN_AGENT` lets a person on your team answer after the 24-hour window has closed, and works only when the Meta app has been approved for the Human Agent feature. Meta retired `CONFIRMED_EVENT_UPDATE`, `ACCOUNT_UPDATE` and `POST_PURCHASE_UPDATE` on 2026-04-27; sending one is a 400.
+     */
+    messageTag?: 'HUMAN_AGENT';
 };
 
 export type InboxMessageSendResponse = {
@@ -1328,11 +1555,71 @@ export type InboxMessageSendResponse = {
     };
 };
 
+export type InboxMessageReactionRequest = {
+    /**
+     * PostZen account id that owns the conversation.
+     */
+    accountId: string;
+    /**
+     * The reaction emoji. Up to 16 code points, so skin tones and joined emoji fit.
+     */
+    emoji: string;
+};
+
+export type InboxMessageReactionResponse = {
+    success: true;
+    /**
+     * `Reaction added.` or `Reaction removed.`
+     */
+    message: string;
+};
+
+/**
+ * `message` with optional `quickReplies` or `buttons`, not both. `attachmentUrl`, `attachmentType`, `template`, `messagingType` and `messageTag` are refused with a 400.
+ */
+export type InboxPrivateReplyRequest = {
+    /**
+     * PostZen account id of the connected Instagram account or Facebook Page that received the comment.
+     */
+    accountId: string;
+    /**
+     * Reply text. At most 1000 UTF-8 bytes on Instagram and 2000 characters on Facebook, or 640 characters when `buttons` are attached.
+     */
+    message: string;
+    /**
+     * Tappable chips shown under the reply. Cannot be combined with `buttons`.
+     */
+    quickReplies?: Array<InboxMessageQuickReply>;
+    /**
+     * Buttons under the reply. `phone` buttons are Facebook only. Cannot be combined with `quickReplies`.
+     */
+    buttons?: Array<InboxMessageSendButton>;
+};
+
+export type InboxPrivateReplyResponse = {
+    success: true;
+    data: {
+        /**
+         * Platform id of the sent message.
+         */
+        messageId: string;
+        /**
+         * The comment the reply answers.
+         */
+        commentId: string;
+        platform: 'instagram' | 'facebook';
+    };
+};
+
 export type InboxDmErrorResponse = ErrorResponse & {
     /**
-     * Machine-readable failure reason. PostZen's own reasons are `accountNotFound`, `conversationNotFound`, `forbidden`, `platformUnsupported`, `platformCapabilityMissing`, `connectionDead`, `idempotencyConflict`, and `idempotencyInFlight`. `PLATFORM_LIMITATION` means the platform refused a send it could accept at another time — the 24-hour window has closed, or the recipient is unavailable — rather than that the request was wrong. Other platform failures carry the platform's own error code, which for Meta is a numeric string such as `100` or `190`. Absent on plain parameter-validation errors and on PostZen's own rate-limit response.
+     * Machine-readable failure reason. PostZen's own reasons are `accountNotFound`, `conversationNotFound`, `messageNotFound`, `forbidden`, `platformUnsupported`, `platformCapabilityMissing`, `connectionDead`, `unsupported` (valid in general, but not on this account's platform), `idempotencyConflict`, `idempotencyInFlight`, `providerOutcomeUnknown`, and `privateReplyConsumed`. `PLATFORM_LIMITATION` means the platform refused a send it could accept at another time (the 24-hour window has closed, or the recipient is unavailable) rather than that the request was wrong. `notThreadOwner` means another app connected to the Facebook Page controls the Messenger conversation. Other platform failures carry the platform's own error code, which for Meta is a numeric string such as `100` or `190`. Absent on plain parameter-validation errors and on PostZen's own rate-limit response.
      */
     code?: string;
+    /**
+     * The request field that failed validation, down to the array index (`buttons[1].url`). Present when the message body failed validation.
+     */
+    param?: string;
     /**
      * Platform the failure relates to, when PostZen could determine one.
      */
@@ -1946,7 +2233,7 @@ export type ApiKeyCreateResponse = {
 /**
  * Webhook event type. See the Webhook Events section for each event's trigger and payload. Receivers should tolerate additional event types in future API versions.
  */
-export type WebhookEvent = 'post.scheduled' | 'post.published' | 'post.partially_failed' | 'post.failed' | 'post.cancelled' | 'post.platform.published' | 'post.platform.failed' | 'post.external.created' | 'account.connected' | 'account.needs_reauth' | 'account.disconnected' | 'analytics.synced' | 'conversation.started' | 'message.received' | 'message.sent' | 'comment.received' | 'contact.tag_added' | 'contact.tag_removed' | 'contact.field_changed' | 'webhook.test';
+export type WebhookEvent = 'post.scheduled' | 'post.published' | 'post.partially_failed' | 'post.failed' | 'post.cancelled' | 'post.platform.published' | 'post.platform.failed' | 'post.external.created' | 'account.connected' | 'account.needs_reauth' | 'account.disconnected' | 'analytics.synced' | 'conversation.started' | 'message.received' | 'message.sent' | 'message.edited' | 'reaction.received' | 'comment.received' | 'contact.tag_added' | 'contact.tag_removed' | 'contact.field_changed' | 'webhook.test';
 
 /**
  * Platform of the account an event refers to. Webhook payloads use `x` for X (Twitter).
@@ -2226,7 +2513,7 @@ export type WebhookMessageEventMessage = {
     profileId: string;
     platform: WebhookPlatform;
     /**
-     * `incoming` for message.received, `outgoing` for message.sent.
+     * `incoming` for message.received and message.edited, `outgoing` for message.sent.
      */
     direction: 'incoming' | 'outgoing';
     /**
@@ -2250,6 +2537,10 @@ export type WebhookMessageEventMessage = {
      */
     createdAt: string;
     /**
+     * When the person edited the message. Present only on `message.edited`.
+     */
+    editedAt?: string;
+    /**
      * True when the message replies to a story.
      */
     storyReply?: boolean;
@@ -2257,6 +2548,14 @@ export type WebhookMessageEventMessage = {
      * True when the message is a story mention.
      */
     isStoryMention?: boolean;
+    /**
+     * Payload of the postback button the person tapped; `text` holds the button title. Present only on an incoming button tap.
+     */
+    postbackPayload?: string;
+    /**
+     * Payload of the quick reply the person tapped; `text` holds the quick reply title. Present only on an incoming quick reply tap.
+     */
+    quickReplyPayload?: string;
     /**
      * `sync` for messages received from the platform; `dashboard`, `api`, or `automation` for messages sent through PostZen.
      */
@@ -2273,6 +2572,46 @@ export type WebhookMessageEventMessage = {
 
 export type WebhookMessageEventData = {
     message: WebhookMessageEventMessage;
+};
+
+export type WebhookReactionEventReaction = {
+    /**
+     * `react` when the person added or changed their reaction, `unreact` when they removed it.
+     */
+    action: 'react' | 'unreact';
+    /**
+     * The reaction emoji. Present only when `action` is `react`.
+     */
+    emoji?: string;
+    /**
+     * Platform id of the message the reaction is on.
+     */
+    messageId: string;
+    /**
+     * Platform conversation id, the `conversationId` the inbox endpoints accept.
+     */
+    conversationId: string;
+    /**
+     * PostZen account id.
+     */
+    accountId: string;
+    /**
+     * The account's profile.
+     */
+    profileId: string;
+    platform: WebhookPlatform;
+    /**
+     * Platform id of the person who reacted.
+     */
+    senderId: string;
+    /**
+     * When the person reacted or removed their reaction.
+     */
+    createdAt: string;
+};
+
+export type WebhookReactionEventData = {
+    reaction: WebhookReactionEventReaction;
 };
 
 export type WebhookConversationEventConversation = {
@@ -2517,14 +2856,14 @@ export type WebhookConversationEvent = {
 };
 
 /**
- * Envelope for `message.received`, `message.sent`.
+ * Envelope for `message.received`, `message.sent`, `message.edited`.
  */
 export type WebhookMessageEvent = {
     /**
      * Event id (`evt_…`). Stable across automatic retries and manual redeliveries; deduplicate on it.
      */
     id: string;
-    type: 'message.received' | 'message.sent';
+    type: 'message.received' | 'message.sent' | 'message.edited';
     /**
      * Payload version.
      */
@@ -2534,6 +2873,26 @@ export type WebhookMessageEvent = {
      */
     createdAt: string;
     data: WebhookMessageEventData;
+};
+
+/**
+ * Envelope for `reaction.received`.
+ */
+export type WebhookReactionEvent = {
+    /**
+     * Event id (`evt_…`). Stable across automatic retries and manual redeliveries; deduplicate on it.
+     */
+    id: string;
+    type: 'reaction.received';
+    /**
+     * Payload version.
+     */
+    apiVersion: string;
+    /**
+     * When the event was created.
+     */
+    createdAt: string;
+    data: WebhookReactionEventData;
 };
 
 /**
@@ -4840,6 +5199,10 @@ export type ReplyToInboxPostErrors = {
      */
     401: ErrorResponse;
     /**
+     * The plan's monthly inbox send allowance is used up (`freeInboxSendLimitExceeded`). Nothing was posted.
+     */
+    402: PaymentRequiredError;
+    /**
      * The API key is read-only, the account is outside its profile access (`forbidden`), or the connection is missing the account's comment-management scope (`platformCapabilityMissing`) — nothing is sent to the platform in that case.
      */
     403: InboxErrorResponse;
@@ -5005,12 +5368,221 @@ export type HideInboxCommentResponses = {
 
 export type HideInboxCommentResponse = HideInboxCommentResponses[keyof HideInboxCommentResponses];
 
+export type UnlikeInboxCommentData = {
+    body?: never;
+    path: {
+        /**
+         * Post the comments belong to. Accepts a PostZen post id — resolved to the id the post was published under for `accountId` — or the platform's own post/media id, which is the common case because the inbox covers every post the account has, not only the ones PostZen published. Instagram and Facebook also accept a comment id here.
+         */
+        postId: string;
+        /**
+         * Platform id of the comment to like or unlike.
+         */
+        commentId: string;
+    };
+    query: {
+        /**
+         * PostZen account id of the connected Facebook Page that owns the post.
+         */
+        accountId: string;
+    };
+    url: '/v1/inbox/comments/{postId}/{commentId}/like';
+};
+
+export type UnlikeInboxCommentErrors = {
+    /**
+     * A parameter is missing or malformed (a plain `{ error }` body), the account is an Instagram or Threads account, which have no comment-like API (`unsupported`), or the account is not on a platform the inbox supports (`platformUnsupported`). A platform-rejected identifier or parameter also lands here, with `platformError` carrying the platform's wording.
+     */
+    400: InboxErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key is read-only, the account is outside its profile access (`forbidden`), or the connection is missing the account's comment-management scope (`platformCapabilityMissing`) — nothing is sent to the platform in that case.
+     */
+    403: InboxErrorResponse;
+    /**
+     * No such account (`accountNotFound`), no such post for that account (`postNotFound`), the PostZen post has not published to this account yet (`postNotPublished`), or the platform reported the comment as missing.
+     */
+    404: InboxErrorResponse;
+    /**
+     * The account's connection is dead and must be reauthorized before its comments can be read or written.
+     */
+    424: InboxErrorResponse;
+    /**
+     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
+     */
+    429: InboxErrorResponse;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+    /**
+     * The platform could not answer the request. `platformError` carries its wording.
+     */
+    502: InboxErrorResponse;
+};
+
+export type UnlikeInboxCommentError = UnlikeInboxCommentErrors[keyof UnlikeInboxCommentErrors];
+
+export type UnlikeInboxCommentResponses = {
+    /**
+     * Comment unliked.
+     */
+    200: InboxLikeResponse;
+};
+
+export type UnlikeInboxCommentResponse = UnlikeInboxCommentResponses[keyof UnlikeInboxCommentResponses];
+
+export type LikeInboxCommentData = {
+    body: InboxHideRequest;
+    path: {
+        /**
+         * Post the comments belong to. Accepts a PostZen post id — resolved to the id the post was published under for `accountId` — or the platform's own post/media id, which is the common case because the inbox covers every post the account has, not only the ones PostZen published. Instagram and Facebook also accept a comment id here.
+         */
+        postId: string;
+        /**
+         * Platform id of the comment to like or unlike.
+         */
+        commentId: string;
+    };
+    query?: never;
+    url: '/v1/inbox/comments/{postId}/{commentId}/like';
+};
+
+export type LikeInboxCommentErrors = {
+    /**
+     * A parameter is missing or malformed (a plain `{ error }` body), the account is an Instagram or Threads account, which have no comment-like API (`unsupported`), or the account is not on a platform the inbox supports (`platformUnsupported`). A platform-rejected identifier or parameter also lands here, with `platformError` carrying the platform's wording.
+     */
+    400: InboxErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The API key is read-only, the account is outside its profile access (`forbidden`), or the connection is missing the account's comment-management scope (`platformCapabilityMissing`) — nothing is sent to the platform in that case.
+     */
+    403: InboxErrorResponse;
+    /**
+     * No such account (`accountNotFound`), no such post for that account (`postNotFound`), the PostZen post has not published to this account yet (`postNotPublished`), or the platform reported the comment as missing.
+     */
+    404: InboxErrorResponse;
+    /**
+     * The account's connection is dead and must be reauthorized before its comments can be read or written.
+     */
+    424: InboxErrorResponse;
+    /**
+     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
+     */
+    429: InboxErrorResponse;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+    /**
+     * The platform could not answer the request. `platformError` carries its wording.
+     */
+    502: InboxErrorResponse;
+};
+
+export type LikeInboxCommentError = LikeInboxCommentErrors[keyof LikeInboxCommentErrors];
+
+export type LikeInboxCommentResponses = {
+    /**
+     * Comment liked.
+     */
+    200: InboxLikeResponse;
+};
+
+export type LikeInboxCommentResponse = LikeInboxCommentResponses[keyof LikeInboxCommentResponses];
+
+export type SendInboxCommentPrivateReplyData = {
+    body: InboxPrivateReplyRequest;
+    headers?: {
+        /**
+         * Replay protection. Retrying with the same key and the same body replays the stored outcome and sets `Idempotent-Replayed: true`; the same key with a different body, or reused for another comment or for a direct message send, is a 422, and a key whose first request is still in flight is a 409. A reply whose outcome could not be confirmed (`502 providerOutcomeUnknown`) is stored as a terminal outcome, so retrying that key returns the same 502 rather than risking a second reply. Keys are retained for 24 hours.
+         */
+        'Idempotency-Key'?: string;
+    };
+    path: {
+        /**
+         * Post the comment is on: the platform's own post/media id or a PostZen post id. It scopes the `Idempotency-Key`; the reply itself is addressed to `commentId`.
+         */
+        postId: string;
+        /**
+         * Platform id of the comment to answer privately.
+         */
+        commentId: string;
+    };
+    query?: never;
+    url: '/v1/inbox/comments/{postId}/{commentId}/private-reply';
+};
+
+export type SendInboxCommentPrivateReplyErrors = {
+    /**
+     * A parameter is missing or malformed (`param` names the field when the message body failed validation), a field a private reply does not take was sent, the field is valid but not on this account's platform (`unsupported`), the account is not an Instagram account or Facebook Page (`platformUnsupported`), the comment's one private reply is already used or Meta will not take one for it (`privateReplyConsumed`), or Meta refused a send it could accept at another time (`PLATFORM_LIMITATION`).
+     */
+    400: InboxDmErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The plan's monthly inbox send allowance is used up (`freeInboxSendLimitExceeded`). Nothing was sent.
+     */
+    402: PaymentRequiredError;
+    /**
+     * The account is outside the API key's profile access (`forbidden`), or the connection is missing the messaging scope a private reply needs (`platformCapabilityMissing`). Reconnect the account to grant it.
+     */
+    403: InboxDmErrorResponse;
+    /**
+     * No such account (`accountNotFound`).
+     */
+    404: InboxDmErrorResponse;
+    /**
+     * A request with the same `Idempotency-Key` is still in flight (`idempotencyInFlight`); retry once it settles. Or another app connected to the Facebook Page controls the Messenger conversation (`notThreadOwner`).
+     */
+    409: InboxDmErrorResponse;
+    /**
+     * That `Idempotency-Key` was already used with a different request body (`idempotencyConflict`).
+     */
+    422: InboxDmErrorResponse;
+    /**
+     * The connection needs to be reauthorized before its messages can be read (`connectionDead`).
+     */
+    424: InboxDmErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+    /**
+     * The request to Meta did not come back (timeout or transport fault), so PostZen cannot confirm whether the reply was delivered (`providerOutcomeUnknown`). Check the person's inbox thread before trying again: retrying the same `Idempotency-Key` returns this same response. Other failures Meta could not answer also land here.
+     */
+    502: InboxDmErrorResponse;
+};
+
+export type SendInboxCommentPrivateReplyError = SendInboxCommentPrivateReplyErrors[keyof SendInboxCommentPrivateReplyErrors];
+
+export type SendInboxCommentPrivateReplyResponses = {
+    /**
+     * Private reply sent. `Idempotent-Replayed: true` on the response means this was a replay of an earlier identical request rather than a new send.
+     */
+    200: InboxPrivateReplyResponse;
+};
+
+export type SendInboxCommentPrivateReplyResponse = SendInboxCommentPrivateReplyResponses[keyof SendInboxCommentPrivateReplyResponses];
+
 export type ListInboxConversationsData = {
     body?: never;
     path?: never;
     query?: {
         /**
-         * Restrict the read to one connected account. Omitted, every Instagram account the key can reach is queried.
+         * Restrict the read to one connected account. Omitted, every Instagram account and Facebook Page the key can reach is queried.
          */
         accountId?: string;
         /**
@@ -5018,9 +5590,9 @@ export type ListInboxConversationsData = {
          */
         profileId?: string;
         /**
-         * Restrict the read to one platform. Direct messages cover Instagram only; any other value is a validation error.
+         * Restrict the read to one platform. Direct messages cover Instagram and Facebook; any other value is a validation error.
          */
-        platform?: 'instagram';
+        platform?: 'instagram' | 'facebook';
         /**
          * Return only active or only archived threads. Archive state is PostZen-local.
          */
@@ -5096,7 +5668,7 @@ export type SearchInboxConversationsData = {
          */
         direction?: 'incoming' | 'outgoing';
         /**
-         * Restrict the read to one connected account. Omitted, every Instagram account the key can reach is queried.
+         * Restrict the read to one connected account. Omitted, every Instagram account and Facebook Page the key can reach is queried.
          */
         accountId?: string;
         /**
@@ -5104,9 +5676,9 @@ export type SearchInboxConversationsData = {
          */
         profileId?: string;
         /**
-         * Restrict the read to one platform. Direct messages cover Instagram only; any other value is a validation error.
+         * Restrict the read to one platform. Direct messages cover Instagram and Facebook; any other value is a validation error.
          */
-        platform?: 'instagram';
+        platform?: 'instagram' | 'facebook';
         /**
          * Page size.
          */
@@ -5328,6 +5900,60 @@ export type MarkInboxConversationReadResponses = {
 
 export type MarkInboxConversationReadResponse = MarkInboxConversationReadResponses[keyof MarkInboxConversationReadResponses];
 
+export type SendInboxTypingIndicatorData = {
+    body: InboxConversationReadRequest;
+    path: {
+        /**
+         * The platform's own conversation (thread) id, as returned in `id` by the list and search endpoints — not a PostZen document id.
+         */
+        conversationId: string;
+    };
+    query?: never;
+    url: '/v1/inbox/conversations/{conversationId}/typing';
+};
+
+export type SendInboxTypingIndicatorErrors = {
+    /**
+     * A parameter is missing or malformed (a plain `{ error }` body), the account is an Instagram account (`unsupported`), or the account is not on a platform direct messages support (`platformUnsupported`).
+     */
+    400: InboxDmErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The account is outside the API key's profile access (`forbidden`), or the connection is missing the messaging scope this call needs (`platformCapabilityMissing`). Reconnect the account to grant it.
+     */
+    403: InboxDmErrorResponse;
+    /**
+     * No such account (`accountNotFound`) or no such conversation for that account (`conversationNotFound`).
+     */
+    404: InboxDmErrorResponse;
+    /**
+     * The connection needs to be reauthorized before its messages can be read (`connectionDead`).
+     */
+    424: InboxDmErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type SendInboxTypingIndicatorError = SendInboxTypingIndicatorErrors[keyof SendInboxTypingIndicatorErrors];
+
+export type SendInboxTypingIndicatorResponses = {
+    /**
+     * Indicator requested.
+     */
+    200: InboxTypingResponse;
+};
+
+export type SendInboxTypingIndicatorResponse = SendInboxTypingIndicatorResponses[keyof SendInboxTypingIndicatorResponses];
+
 export type ListInboxConversationMessagesData = {
     body?: never;
     path: {
@@ -5419,13 +6045,17 @@ export type SendInboxMessageData = {
 
 export type SendInboxMessageErrors = {
     /**
-     * A parameter is missing or malformed, `message` and `attachmentUrl` were combined, the account is not on a supported platform (`platformUnsupported`), or the platform refused a send it could accept at another time (`PLATFORM_LIMITATION`).
+     * A parameter is missing or malformed (`param` names the field when the message body failed validation), two body shapes were combined, the field is valid but not on this account's platform (`unsupported`), the account is not on a supported platform (`platformUnsupported`), or the platform refused a send it could accept at another time (`PLATFORM_LIMITATION`).
      */
     400: InboxDmErrorResponse;
     /**
      * Missing or invalid API key.
      */
     401: ErrorResponse;
+    /**
+     * The plan's monthly inbox send allowance is used up (`freeInboxSendLimitExceeded`). Nothing was sent.
+     */
+    402: PaymentRequiredError;
     /**
      * The account is outside the API key's profile access (`forbidden`), or the connection is missing the messaging scope this call needs (`platformCapabilityMissing`). Reconnect the account to grant it.
      */
@@ -5435,7 +6065,7 @@ export type SendInboxMessageErrors = {
      */
     404: InboxDmErrorResponse;
     /**
-     * A request with the same `Idempotency-Key` is still in flight (`idempotencyInFlight`). Retry once it settles.
+     * A request with the same `Idempotency-Key` is still in flight (`idempotencyInFlight`); retry once it settles. Or another app connected to the Facebook Page controls this Messenger conversation (`notThreadOwner`), so Meta refused the send; nothing was sent.
      */
     409: InboxDmErrorResponse;
     /**
@@ -5470,6 +6100,143 @@ export type SendInboxMessageResponses = {
 };
 
 export type SendInboxMessageResponse = SendInboxMessageResponses[keyof SendInboxMessageResponses];
+
+export type RemoveInboxMessageReactionData = {
+    body?: never;
+    path: {
+        /**
+         * The platform's own conversation (thread) id, as returned in `id` by the list and search endpoints — not a PostZen document id.
+         */
+        conversationId: string;
+        /**
+         * Platform message id, as returned in `id` by the list-messages endpoint (`m_...` on Messenger). The message must already be in PostZen's synced copy of this conversation.
+         */
+        messageId: string;
+    };
+    query: {
+        /**
+         * PostZen account id that owns the conversation.
+         */
+        accountId: string;
+    };
+    url: '/v1/inbox/conversations/{conversationId}/messages/{messageId}/reactions';
+};
+
+export type RemoveInboxMessageReactionErrors = {
+    /**
+     * A parameter is missing or malformed (a plain `{ error }` body), the account is an Instagram account (`unsupported`), the account is not on a platform direct messages support (`platformUnsupported`), or Meta refused the reaction for a reason that may pass at another time (`PLATFORM_LIMITATION`).
+     */
+    400: InboxDmErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The account is outside the API key's profile access (`forbidden`), or the connection is missing the messaging scope this call needs (`platformCapabilityMissing`). Reconnect the account to grant it.
+     */
+    403: InboxDmErrorResponse;
+    /**
+     * No such account (`accountNotFound`), no such conversation for that account (`conversationNotFound`), or no such message in that conversation (`messageNotFound`).
+     */
+    404: InboxDmErrorResponse;
+    /**
+     * Another app connected to the Facebook Page controls this Messenger conversation (`notThreadOwner`), so Meta refused the reaction.
+     */
+    409: InboxDmErrorResponse;
+    /**
+     * The connection needs to be reauthorized before its messages can be read (`connectionDead`).
+     */
+    424: InboxDmErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+    /**
+     * Meta could not answer the request. `platformError` carries its envelope.
+     */
+    502: InboxDmErrorResponse;
+};
+
+export type RemoveInboxMessageReactionError = RemoveInboxMessageReactionErrors[keyof RemoveInboxMessageReactionErrors];
+
+export type RemoveInboxMessageReactionResponses = {
+    /**
+     * Reaction removed.
+     */
+    200: InboxMessageReactionResponse;
+};
+
+export type RemoveInboxMessageReactionResponse = RemoveInboxMessageReactionResponses[keyof RemoveInboxMessageReactionResponses];
+
+export type AddInboxMessageReactionData = {
+    body: InboxMessageReactionRequest;
+    path: {
+        /**
+         * The platform's own conversation (thread) id, as returned in `id` by the list and search endpoints — not a PostZen document id.
+         */
+        conversationId: string;
+        /**
+         * Platform message id, as returned in `id` by the list-messages endpoint (`m_...` on Messenger). The message must already be in PostZen's synced copy of this conversation.
+         */
+        messageId: string;
+    };
+    query?: never;
+    url: '/v1/inbox/conversations/{conversationId}/messages/{messageId}/reactions';
+};
+
+export type AddInboxMessageReactionErrors = {
+    /**
+     * A parameter is missing or malformed (a plain `{ error }` body), the account is an Instagram account (`unsupported`), the account is not on a platform direct messages support (`platformUnsupported`), or Meta refused the reaction for a reason that may pass at another time (`PLATFORM_LIMITATION`).
+     */
+    400: InboxDmErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * The account is outside the API key's profile access (`forbidden`), or the connection is missing the messaging scope this call needs (`platformCapabilityMissing`). Reconnect the account to grant it.
+     */
+    403: InboxDmErrorResponse;
+    /**
+     * No such account (`accountNotFound`), no such conversation for that account (`conversationNotFound`), or no such message in that conversation (`messageNotFound`).
+     */
+    404: InboxDmErrorResponse;
+    /**
+     * Another app connected to the Facebook Page controls this Messenger conversation (`notThreadOwner`), so Meta refused the reaction.
+     */
+    409: InboxDmErrorResponse;
+    /**
+     * The connection needs to be reauthorized before its messages can be read (`connectionDead`).
+     */
+    424: InboxDmErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+    /**
+     * Meta could not answer the request. `platformError` carries its envelope.
+     */
+    502: InboxDmErrorResponse;
+};
+
+export type AddInboxMessageReactionError = AddInboxMessageReactionErrors[keyof AddInboxMessageReactionErrors];
+
+export type AddInboxMessageReactionResponses = {
+    /**
+     * Reaction added.
+     */
+    200: InboxMessageReactionResponse;
+};
+
+export type AddInboxMessageReactionResponse = AddInboxMessageReactionResponses[keyof AddInboxMessageReactionResponses];
 
 export type DeleteQueueSlotData = {
     body?: never;

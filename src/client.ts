@@ -6,6 +6,7 @@
 import packageJson from '../package.json';
 import { createClient, createConfig, type Client } from './generated/client';
 import {
+  addInboxMessageReaction,
   bulkCreateContacts,
   bulkUploadPosts,
   completeConnect,
@@ -43,6 +44,7 @@ import {
   getProfile,
   getWebhook,
   hideInboxComment,
+  likeInboxComment,
   listAccounts,
   listApiKeys,
   listCommentAutomationLogs,
@@ -62,13 +64,17 @@ import {
   markInboxConversationRead,
   previewQueue,
   redeliverWebhookDelivery,
+  removeInboxMessageReaction,
   replyToInboxPost,
   searchInboxConversations,
   selectPinterestBoard,
+  sendInboxCommentPrivateReply,
   sendInboxMessage,
+  sendInboxTypingIndicator,
   syncExternalPosts,
   testWebhook,
   unhideInboxComment,
+  unlikeInboxComment,
   updateCommentAutomation,
   updateContact,
   updateInboxConversation,
@@ -302,6 +308,30 @@ export class PostZen {
   };
 
   /**
+   * inbox API
+   */
+  inbox = {
+    addInboxMessageReaction: ((options?: Parameters<typeof addInboxMessageReaction>[0]) => addInboxMessageReaction(this._withRequestOptions(options) as Parameters<typeof addInboxMessageReaction>[0])) as typeof addInboxMessageReaction,
+    deleteInboxComment: ((options?: Parameters<typeof deleteInboxComment>[0]) => deleteInboxComment(this._withRequestOptions(options) as Parameters<typeof deleteInboxComment>[0])) as typeof deleteInboxComment,
+    getInboxConversation: ((options?: Parameters<typeof getInboxConversation>[0]) => getInboxConversation(this._withRequestOptions(options) as Parameters<typeof getInboxConversation>[0])) as typeof getInboxConversation,
+    hideInboxComment: ((options?: Parameters<typeof hideInboxComment>[0]) => hideInboxComment(this._withRequestOptions(options) as Parameters<typeof hideInboxComment>[0])) as typeof hideInboxComment,
+    likeInboxComment: ((options?: Parameters<typeof likeInboxComment>[0]) => likeInboxComment(this._withRequestOptions(options) as Parameters<typeof likeInboxComment>[0])) as typeof likeInboxComment,
+    listInboxConversationMessages: ((options?: Parameters<typeof listInboxConversationMessages>[0]) => listInboxConversationMessages(this._withRequestOptions(options) as Parameters<typeof listInboxConversationMessages>[0])) as typeof listInboxConversationMessages,
+    listInboxConversations: ((options?: Parameters<typeof listInboxConversations>[0]) => listInboxConversations(this._withRequestOptions(options) as Parameters<typeof listInboxConversations>[0])) as typeof listInboxConversations,
+    listInboxPostComments: ((options?: Parameters<typeof listInboxPostComments>[0]) => listInboxPostComments(this._withRequestOptions(options) as Parameters<typeof listInboxPostComments>[0])) as typeof listInboxPostComments,
+    markInboxConversationRead: ((options?: Parameters<typeof markInboxConversationRead>[0]) => markInboxConversationRead(this._withRequestOptions(options) as Parameters<typeof markInboxConversationRead>[0])) as typeof markInboxConversationRead,
+    removeInboxMessageReaction: ((options?: Parameters<typeof removeInboxMessageReaction>[0]) => removeInboxMessageReaction(this._withRequestOptions(options) as Parameters<typeof removeInboxMessageReaction>[0])) as typeof removeInboxMessageReaction,
+    replyToInboxPost: ((options?: Parameters<typeof replyToInboxPost>[0]) => replyToInboxPost(this._withRequestOptions(options) as Parameters<typeof replyToInboxPost>[0])) as typeof replyToInboxPost,
+    searchInboxConversations: ((options?: Parameters<typeof searchInboxConversations>[0]) => searchInboxConversations(this._withRequestOptions(options) as Parameters<typeof searchInboxConversations>[0])) as typeof searchInboxConversations,
+    sendInboxCommentPrivateReply: ((options?: Parameters<typeof sendInboxCommentPrivateReply>[0]) => sendInboxCommentPrivateReply(this._withRequestOptions(options) as Parameters<typeof sendInboxCommentPrivateReply>[0])) as typeof sendInboxCommentPrivateReply,
+    sendInboxMessage: ((options?: Parameters<typeof sendInboxMessage>[0]) => sendInboxMessage(this._withRequestOptions(options) as Parameters<typeof sendInboxMessage>[0])) as typeof sendInboxMessage,
+    sendInboxTypingIndicator: ((options?: Parameters<typeof sendInboxTypingIndicator>[0]) => sendInboxTypingIndicator(this._withRequestOptions(options) as Parameters<typeof sendInboxTypingIndicator>[0])) as typeof sendInboxTypingIndicator,
+    unhideInboxComment: ((options?: Parameters<typeof unhideInboxComment>[0]) => unhideInboxComment(this._withRequestOptions(options) as Parameters<typeof unhideInboxComment>[0])) as typeof unhideInboxComment,
+    unlikeInboxComment: ((options?: Parameters<typeof unlikeInboxComment>[0]) => unlikeInboxComment(this._withRequestOptions(options) as Parameters<typeof unlikeInboxComment>[0])) as typeof unlikeInboxComment,
+    updateInboxConversation: ((options?: Parameters<typeof updateInboxConversation>[0]) => updateInboxConversation(this._withRequestOptions(options) as Parameters<typeof updateInboxConversation>[0])) as typeof updateInboxConversation,
+  };
+
+  /**
    * contacts API
    */
   contacts = {
@@ -359,24 +389,6 @@ export class PostZen {
     redeliverWebhookDelivery: ((options?: Parameters<typeof redeliverWebhookDelivery>[0]) => redeliverWebhookDelivery(this._withRequestOptions(options) as Parameters<typeof redeliverWebhookDelivery>[0])) as typeof redeliverWebhookDelivery,
     testWebhook: ((options?: Parameters<typeof testWebhook>[0]) => testWebhook(this._withRequestOptions(options) as Parameters<typeof testWebhook>[0])) as typeof testWebhook,
     updateWebhook: ((options?: Parameters<typeof updateWebhook>[0]) => updateWebhook(this._withRequestOptions(options) as Parameters<typeof updateWebhook>[0])) as typeof updateWebhook,
-  };
-
-  /**
-   * inbox API
-   */
-  inbox = {
-    deleteInboxComment: ((options?: Parameters<typeof deleteInboxComment>[0]) => deleteInboxComment(this._withRequestOptions(options) as Parameters<typeof deleteInboxComment>[0])) as typeof deleteInboxComment,
-    getInboxConversation: ((options?: Parameters<typeof getInboxConversation>[0]) => getInboxConversation(this._withRequestOptions(options) as Parameters<typeof getInboxConversation>[0])) as typeof getInboxConversation,
-    hideInboxComment: ((options?: Parameters<typeof hideInboxComment>[0]) => hideInboxComment(this._withRequestOptions(options) as Parameters<typeof hideInboxComment>[0])) as typeof hideInboxComment,
-    listInboxConversationMessages: ((options?: Parameters<typeof listInboxConversationMessages>[0]) => listInboxConversationMessages(this._withRequestOptions(options) as Parameters<typeof listInboxConversationMessages>[0])) as typeof listInboxConversationMessages,
-    listInboxConversations: ((options?: Parameters<typeof listInboxConversations>[0]) => listInboxConversations(this._withRequestOptions(options) as Parameters<typeof listInboxConversations>[0])) as typeof listInboxConversations,
-    listInboxPostComments: ((options?: Parameters<typeof listInboxPostComments>[0]) => listInboxPostComments(this._withRequestOptions(options) as Parameters<typeof listInboxPostComments>[0])) as typeof listInboxPostComments,
-    markInboxConversationRead: ((options?: Parameters<typeof markInboxConversationRead>[0]) => markInboxConversationRead(this._withRequestOptions(options) as Parameters<typeof markInboxConversationRead>[0])) as typeof markInboxConversationRead,
-    replyToInboxPost: ((options?: Parameters<typeof replyToInboxPost>[0]) => replyToInboxPost(this._withRequestOptions(options) as Parameters<typeof replyToInboxPost>[0])) as typeof replyToInboxPost,
-    searchInboxConversations: ((options?: Parameters<typeof searchInboxConversations>[0]) => searchInboxConversations(this._withRequestOptions(options) as Parameters<typeof searchInboxConversations>[0])) as typeof searchInboxConversations,
-    sendInboxMessage: ((options?: Parameters<typeof sendInboxMessage>[0]) => sendInboxMessage(this._withRequestOptions(options) as Parameters<typeof sendInboxMessage>[0])) as typeof sendInboxMessage,
-    unhideInboxComment: ((options?: Parameters<typeof unhideInboxComment>[0]) => unhideInboxComment(this._withRequestOptions(options) as Parameters<typeof unhideInboxComment>[0])) as typeof unhideInboxComment,
-    updateInboxConversation: ((options?: Parameters<typeof updateInboxConversation>[0]) => updateInboxConversation(this._withRequestOptions(options) as Parameters<typeof updateInboxConversation>[0])) as typeof updateInboxConversation,
   };
 
   /**
