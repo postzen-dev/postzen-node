@@ -286,6 +286,12 @@ export type CommentAutomationLog = {
 
 export type CommentAutomationListResponse = {
     automations: Array<CommentAutomation>;
+    pagination: {
+        total: number;
+        limit: number;
+        skip: number;
+        hasMore: boolean;
+    };
 };
 
 export type CommentAutomationResponse = {
@@ -6332,6 +6338,8 @@ export type ListCommentAutomationsData = {
     query?: {
         profileId?: string;
         accountId?: string;
+        limit?: number;
+        skip?: number;
     };
     url: '/v1/comment-automations';
 };
@@ -6399,7 +6407,7 @@ export type CreateCommentAutomationErrors = {
      */
     404: ErrorResponse;
     /**
-     * limitReached (100 per user) or duplicatePostAutomation (an active per-post automation already exists).
+     * limitReached (the plan's automation limit: Free 100, Starter 500, Pro 1,000, Scale 2,000), accountLimitReached (500 per connected account on every plan), or duplicatePostAutomation (an active per-post automation already exists).
      */
     409: ErrorResponse;
     /**
@@ -6449,10 +6457,6 @@ export type DeleteCommentAutomationErrors = {
      * Resource not found.
      */
     404: ErrorResponse;
-    /**
-     * limitReached (100 per user) or duplicatePostAutomation (an active per-post automation already exists).
-     */
-    409: ErrorResponse;
     /**
      * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
      */
@@ -6550,7 +6554,7 @@ export type UpdateCommentAutomationErrors = {
      */
     404: ErrorResponse;
     /**
-     * limitReached (100 per user) or duplicatePostAutomation (an active per-post automation already exists).
+     * duplicatePostAutomation (an active per-post automation already exists) or linkedPostDeleted (the post this automation is linked to was deleted).
      */
     409: ErrorResponse;
     /**
