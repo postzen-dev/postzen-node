@@ -1195,6 +1195,14 @@ export type InboxConversation = {
     lastMessage?: string;
     lastMessageAt?: string;
     /**
+     * When the other participant last sent a message that PostZen has synced, or null when none is known; it reflects synced messages, so it can lag Meta by a sync interval.
+     */
+    lastInboundAt: string | null;
+    /**
+     * `lastInboundAt` plus 24 hours, the end of Meta's reply window, or null when `lastInboundAt` is null; it reflects synced messages and can lag by a sync interval, and Meta makes the final decision on every send.
+     */
+    replyWindowClosesAt: string | null;
+    /**
      * The platform's own last-activity time for the thread. This is the list sort key.
      */
     updatedTime: string;
@@ -1276,6 +1284,14 @@ export type InboxConversationSearchHit = {
         status: 'active' | 'archived';
         lastMessage?: string;
         lastMessageAt?: string;
+        /**
+         * When the other participant last sent a message that PostZen has synced, or null when none is known; it reflects synced messages, so it can lag Meta by a sync interval.
+         */
+        lastInboundAt: string | null;
+        /**
+         * `lastInboundAt` plus 24 hours, the end of Meta's reply window, or null when `lastInboundAt` is null; it reflects synced messages and can lag by a sync interval, and Meta makes the final decision on every send.
+         */
+        replyWindowClosesAt: string | null;
     };
     /**
      * Matching messages in the thread. `matches` carries at most the first five of them; a thread matched only on the participant’s name reports 0.
@@ -1633,6 +1649,14 @@ export type InboxDmErrorResponse = ErrorResponse & {
         fbtraceId?: string;
         type?: string;
     };
+    /**
+     * Present only on a send refused for the 24-hour reply window: the conversation's stored `lastInboundAt` that the `error` text was written from.
+     */
+    lastInboundAt?: string | null;
+    /**
+     * Present alongside `lastInboundAt`: the stored end of the reply window, which can lag Meta by a sync interval.
+     */
+    replyWindowClosesAt?: string | null;
 };
 
 export type ConnectStartResponse = {
@@ -6045,7 +6069,7 @@ export type SendInboxMessageData = {
 
 export type SendInboxMessageErrors = {
     /**
-     * A parameter is missing or malformed (`param` names the field when the message body failed validation), two body shapes were combined, the field is valid but not on this account's platform (`unsupported`), the account is not on a supported platform (`platformUnsupported`), or the platform refused a send it could accept at another time (`PLATFORM_LIMITATION`).
+     * A parameter is missing or malformed (`param` names the field when the message body failed validation), two body shapes were combined, the field is valid but not on this account's platform (`unsupported`), the account is not on a supported platform (`platformUnsupported`), or the platform refused a send it could accept at another time (`PLATFORM_LIMITATION`; a 24-hour window refusal also carries the stored `lastInboundAt` and `replyWindowClosesAt`).
      */
     400: InboxDmErrorResponse;
     /**
@@ -6589,11 +6613,11 @@ export type GetAnalyticsData = {
          */
         source?: AnalyticsSource;
         /**
-         * Inclusive range start. Defaults to 90 days before `toDate`.
+         * Inclusive range start. Defaults to 90 days before `toDate`. The range may span at most 366 days, and `toDate` defaults to now, so an older `fromDate` needs a `toDate` within 366 days of it.
          */
         fromDate?: AnalyticsDate;
         /**
-         * Inclusive range end. Defaults to the current time.
+         * Inclusive range end. Defaults to the current time. Must be no more than 366 days after `fromDate`.
          */
         toDate?: AnalyticsDate;
         /**
@@ -6675,11 +6699,11 @@ export type GetPostTimelineData = {
          */
         postId: string;
         /**
-         * Inclusive range start. Defaults to 90 days before `toDate`.
+         * Inclusive range start. Defaults to 90 days before `toDate`. The range may span at most 366 days, and `toDate` defaults to now, so an older `fromDate` needs a `toDate` within 366 days of it.
          */
         fromDate?: AnalyticsDate;
         /**
-         * Inclusive range end. Defaults to the current time.
+         * Inclusive range end. Defaults to the current time. Must be no more than 366 days after `fromDate`.
          */
         toDate?: AnalyticsDate;
     };
@@ -6745,11 +6769,11 @@ export type GetDailyMetricsData = {
          */
         accountId?: string;
         /**
-         * Inclusive range start. Defaults to 180 days before `toDate`.
+         * Inclusive range start. Defaults to 180 days before `toDate`. The range may span at most 366 days, and `toDate` defaults to now, so an older `fromDate` needs a `toDate` within 366 days of it.
          */
         fromDate?: AnalyticsDate;
         /**
-         * Inclusive range end. Defaults to the current time.
+         * Inclusive range end. Defaults to the current time. Must be no more than 366 days after `fromDate`.
          */
         toDate?: AnalyticsDate;
         /**
@@ -6885,11 +6909,11 @@ export type GetFollowerStatsData = {
          */
         profileId?: string;
         /**
-         * Inclusive range start. Defaults to 30 days before `toDate`.
+         * Inclusive range start. Defaults to 30 days before `toDate`. The range may span at most 366 days, and `toDate` defaults to now, so an older `fromDate` needs a `toDate` within 366 days of it.
          */
         fromDate?: AnalyticsDate;
         /**
-         * Inclusive range end. Defaults to the current time.
+         * Inclusive range end. Defaults to the current time. Must be no more than 366 days after `fromDate`.
          */
         toDate?: AnalyticsDate;
         /**
