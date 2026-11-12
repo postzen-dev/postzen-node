@@ -172,6 +172,11 @@ describe('Endpoint Methods', () => {
       expect(client.inbox.likeInboxComment).toBeTypeOf('function');
     });
 
+    it('has listInboxComments', () => {
+      expect(client.inbox.listInboxComments).toBeDefined();
+      expect(client.inbox.listInboxComments).toBeTypeOf('function');
+    });
+
     it('has listInboxConversationMessages', () => {
       expect(client.inbox.listInboxConversationMessages).toBeDefined();
       expect(client.inbox.listInboxConversationMessages).toBeTypeOf('function');
@@ -405,6 +410,11 @@ describe('Endpoint Methods', () => {
   });
 
   describe('analytics', () => {
+    it('has getAccountInsights', () => {
+      expect(client.analytics.getAccountInsights).toBeDefined();
+      expect(client.analytics.getAccountInsights).toBeTypeOf('function');
+    });
+
     it('has getAnalytics', () => {
       expect(client.analytics.getAnalytics).toBeDefined();
       expect(client.analytics.getAnalytics).toBeTypeOf('function');

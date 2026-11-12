@@ -504,6 +504,18 @@ export type AnalyticsMetrics = AnalyticsMetricTotals & {
      * Instagram Reels only. Total time spent playing the Reel across all plays, including replays, in milliseconds. Omitted and carried over under the same conditions as `skipRate`.
      */
     totalWatchTimeMs?: number;
+    /**
+     * Share of views that watched the video to the end, from 0 to 100. Reported for TikTok accounts on a TikTok for Business connection; absent otherwise.
+     */
+    completionRate?: number;
+    /**
+     * Followers gained from this post. Reported for TikTok accounts on a TikTok for Business connection; absent otherwise.
+     */
+    newFollowers?: number;
+    /**
+     * Traffic sources, retention curve, and viewer gender and country for one TikTok post. Returned only when a single post is requested with `postId`, and only for a TikTok for Business connection.
+     */
+    insights?: VideoInsights;
     lastUpdated: string | null;
 };
 
@@ -814,6 +826,10 @@ export type Account = {
      * Default Pinterest board name. Present when Pinterest returned a name for the selected default board.
      */
     defaultBoardName?: string;
+    /**
+     * TikTok only. `business` when the account is connected through PostZen's TikTok for Business app, which every new TikTok connection uses. Absent for a TikTok account connected earlier and for every other platform. The lane decides video privacy, comments, and insights; see the TikTok platform guide.
+     */
+    connectionLane?: 'business';
 };
 
 export type Pagination = {
@@ -928,7 +944,7 @@ export type RateLimitError = {
 };
 
 /**
- * A comment or reply normalized to one shape across Instagram, Facebook, and Threads. A field the platform does not report is absent rather than zero.
+ * A comment or reply normalized to one shape across Instagram, Facebook, Threads, and TikTok. A field the platform does not report is absent rather than zero.
  */
 export type InboxComment = {
     /**
@@ -967,13 +983,13 @@ export type InboxComment = {
     /**
      * Platform the comment lives on.
      */
-    platform: 'instagram' | 'facebook' | 'threads';
+    platform: 'instagram' | 'facebook' | 'threads' | 'tiktok';
     /**
      * Permalink to the comment, when the platform returns one.
      */
     url?: string;
     /**
-     * First page of nested replies, when the listing returned them cheaply. Instagram threads are two levels deep, so a reply's own `replies` is always empty.
+     * First page of nested replies, when the listing returned them cheaply. Instagram and TikTok threads are two levels deep, so a reply's own `replies` is always empty. TikTok comments arrive without inline replies; list them with `commentId`.
      */
     replies: Array<InboxComment>;
     /**
@@ -985,23 +1001,23 @@ export type InboxComment = {
      */
     canReply: boolean;
     /**
-     * True when this comment can be deleted. Facebook reports it per comment; Threads reports it only for replies the connected account wrote.
+     * True when this comment can be deleted. Facebook reports it per comment; Threads reports it only for replies the connected account wrote; TikTok only for the connected account's own comments.
      */
     canDelete: boolean;
     /**
-     * True when this comment can be hidden. Facebook reports it per comment; on Threads only top-level replies on the account's own posts qualify.
+     * True when this comment can be hidden. Facebook reports it per comment; on Threads only top-level replies on the account's own posts qualify; on TikTok only other people's comments.
      */
     canHide: boolean;
     /**
-     * True when the comment is currently hidden. Threads' `HIDDEN` and `COVERED` states both map to true.
+     * True when the comment is currently hidden. Threads' `HIDDEN` and `COVERED` states both map to true, and TikTok's `HIDDEN` includes comments TikTok hid for moderation or privacy.
      */
     isHidden: boolean;
     /**
-     * True when the connected account can like this comment. Only Facebook Pages can, so it is always false on Instagram and Threads.
+     * True when the connected account can like this comment. Only Facebook Pages and TikTok accounts can, so it is always false on Instagram and Threads.
      */
     canLike: boolean;
     /**
-     * Facebook only: true when the connected Page itself likes the comment. Absent when the platform did not say.
+     * Facebook and TikTok only: true when the connected Page or TikTok account itself likes the comment. Absent when the platform did not say.
      */
     isLiked?: boolean;
     /**
@@ -1015,7 +1031,7 @@ export type InboxComment = {
 };
 
 /**
- * Media attached to a comment. The URLs are expiring Meta CDN links; read the comment again for a fresh one.
+ * Media attached to a comment. The URLs are expiring platform CDN links (TikTok reports images only); read the comment again for a fresh one.
  */
 export type InboxCommentAttachment = {
     type: 'image' | 'video' | 'sticker' | 'gif' | 'share' | 'file';
@@ -1046,7 +1062,7 @@ export type InboxCommentsResponse = {
         /**
          * Platform the comment lives on.
          */
-        platform: 'instagram' | 'facebook' | 'threads';
+        platform: 'instagram' | 'facebook' | 'threads' | 'tiktok';
         /**
          * Platform post id the comments were read from. When a PostZen post id was supplied it is the resolved platform id, not the id you sent.
          */
@@ -1064,7 +1080,7 @@ export type InboxCommentsResponse = {
 
 export type InboxReplyRequest = {
     /**
-     * PostZen account id of the connected Instagram, Facebook, or Threads account that owns the post.
+     * PostZen account id of the connected Instagram, Facebook, Threads, or TikTok account that owns the post.
      */
     accountId: string;
     /**
@@ -1072,7 +1088,7 @@ export type InboxReplyRequest = {
      */
     message: string;
     /**
-     * Reply to this comment instead of commenting on the post. On Instagram a reply to a reply is redirected to its top-level parent.
+     * Reply to this comment instead of commenting on the post. On Instagram and TikTok a reply to a reply is redirected to its top-level parent.
      */
     commentId?: string;
     /**
@@ -1097,7 +1113,7 @@ export type InboxReplyResponse = {
 
 export type InboxHideRequest = {
     /**
-     * PostZen account id of the connected Instagram, Facebook, or Threads account that owns the post.
+     * PostZen account id of the connected Instagram, Facebook, Threads, or TikTok account that owns the post.
      */
     accountId: string;
 };
@@ -1115,7 +1131,7 @@ export type InboxHideResponse = {
     /**
      * Platform the comment lives on.
      */
-    platform: 'instagram' | 'facebook' | 'threads';
+    platform: 'instagram' | 'facebook' | 'threads' | 'tiktok';
 };
 
 export type InboxLikeResponse = {
@@ -1125,13 +1141,13 @@ export type InboxLikeResponse = {
      */
     commentId: string;
     /**
-     * Whether the connected Page likes the comment after the call.
+     * Whether the connected Page or TikTok account likes the comment after the call.
      */
     liked: boolean;
     /**
      * Platform the comment lives on.
      */
-    platform: 'facebook';
+    platform: 'facebook' | 'tiktok';
 };
 
 /**
@@ -1144,7 +1160,7 @@ export type InboxActionResponse = {
 
 export type InboxErrorResponse = ErrorResponse & {
     /**
-     * Machine-readable failure reason. PostZen's own reasons are `accountNotFound`, `forbidden`, `platformUnsupported`, `platformCapabilityMissing`, `connectionDead`, `postNotFound`, `postNotPublished`, `attachmentUnsupported`, `unsupported` (the platform has no API for this action, such as liking an Instagram comment), and `publishPending` (Threads accepted the reply container but had not published it yet — the reply may still appear, so check the thread before retrying). Failures raised by the platform carry the platform's own error code instead, which for Meta is a numeric string such as `100` or `190`. Absent on plain parameter-validation errors and on PostZen's own rate-limit response.
+     * Machine-readable failure reason. PostZen's own reasons are `accountNotFound`, `forbidden`, `platformUnsupported`, `platformCapabilityMissing`, `connectionDead`, `postNotFound`, `postNotPublished`, `attachmentUnsupported`, `unsupported` (the platform has no API for this action, such as liking an Instagram comment, or does not allow it on this comment, such as deleting someone else's TikTok comment), and `publishPending` (Threads accepted the reply container but had not published it yet — the reply may still appear, so check the thread before retrying). Failures raised by the platform carry the platform's own error code instead, which for Meta is a numeric string such as `100` or `190`. Absent on plain parameter-validation errors and on PostZen's own rate-limit response.
      */
     code?: string;
     /**
@@ -1155,6 +1171,90 @@ export type InboxErrorResponse = ErrorResponse & {
      * The platform's own error message, present when the failure came from the platform rather than from PostZen.
      */
     platformError?: string;
+};
+
+export type InboxCommentedPost = {
+    /**
+     * The platform's post id. Use it as `{postId}` on `GET /v1/inbox/comments/{postId}` with this `accountId`.
+     */
+    id: string;
+    platform: 'instagram' | 'facebook' | 'threads' | 'tiktok';
+    accountId: string;
+    accountUsername: string;
+    /**
+     * Caption or text. Absent when the platform reports none.
+     */
+    content?: string;
+    /**
+     * Thumbnail URL when known. Platform CDN links can expire. Absent in the summary view.
+     */
+    picture?: string;
+    /**
+     * Present, and true, only when the summary view cut `content`.
+     */
+    contentTruncated?: true;
+    permalink?: string;
+    createdTime: string;
+    /**
+     * Comment count the platform reported at the last refresh. Absent when the platform reports none (Threads).
+     */
+    commentCount?: number;
+    /**
+     * Likes on the post as the platform reported them at the last refresh: Instagram `like_count`, the Facebook post's `likes` summary total (Like reactions only, not other reactions), and the TikTok video's `likes`. Omitted for Threads, and for Instagram posts whose owner hid like counts. Never 0 for unknown.
+     */
+    likeCount?: number;
+};
+
+export type InboxCommentedPostsPagination = {
+    hasMore: boolean;
+    /**
+     * Present when `hasMore` is true.
+     */
+    nextCursor?: string;
+};
+
+export type InboxCommentedPostsFailedAccount = {
+    accountId: string;
+    accountUsername: string;
+    platform: 'instagram' | 'facebook' | 'threads' | 'tiktok';
+    /**
+     * Why the refresh failed, in PostZen or the platform’s own words.
+     */
+    error: string;
+    /**
+     * `connection_dead` (reauthorize the account), `refresh_failed` (unexpected failure), another PostZen context code, or the platform's own error code.
+     */
+    code: string;
+    /**
+     * Seconds to wait before the account can be refreshed, when throttled.
+     */
+    retryAfter?: number;
+};
+
+/**
+ * How the read-through refresh went. A failed account's stored posts are still returned.
+ */
+export type InboxCommentedPostsMeta = {
+    /**
+     * Accounts whose stored posts this page read.
+     */
+    accountsQueried: number;
+    accountsFailed: number;
+    failedAccounts: Array<InboxCommentedPostsFailedAccount>;
+    lastUpdated: string;
+    /**
+     * TikTok accounts not connected through the TikTok for Business app. Never queried; reconnecting moves them to the Business app.
+     */
+    accountsSkipped: Array<{
+        accountId: string;
+        platform: 'tiktok';
+    }>;
+};
+
+export type InboxCommentedPostsResponse = {
+    data: Array<InboxCommentedPost>;
+    pagination: InboxCommentedPostsPagination;
+    meta: InboxCommentedPostsMeta;
 };
 
 export type InboxConversation = {
@@ -3764,6 +3864,125 @@ export type ContactBulkCreateResponse = {
     total: number;
 };
 
+/**
+ * Per-video breakdowns for TikTok accounts connected through the TikTok Business app. Returned on single-post responses only. Percentages are 0 to 100; a list TikTok did not return is omitted.
+ */
+export type VideoInsights = {
+    /**
+     * Where views came from, as slugs such as for_you, follow, search or hashtag.
+     */
+    impressionSources?: Array<{
+        source: string;
+        percent: number;
+    }>;
+    /**
+     * Share of viewers still watching at each second, at most 60 points.
+     */
+    retention?: Array<{
+        second: number;
+        percent: number;
+    }>;
+    audienceGenders?: Array<{
+        gender: string;
+        percent: number;
+    }>;
+    /**
+     * Top 10 viewer countries, ISO 3166-1 alpha-2.
+     */
+    audienceCountries?: Array<{
+        country: string;
+        percent: number;
+    }>;
+    observedAt: string;
+};
+
+/**
+ * Daily profile activity, range totals, and the audience breakdown for a TikTok account on a TikTok for Business connection. A field TikTok did not report is omitted, never returned as 0; `availability` says why a section is empty.
+ */
+export type AccountInsightsResponse = {
+    accountId: string;
+    platform: 'tiktok';
+    connectionLane: 'business';
+    dateRange: {
+        from: string;
+        to: string;
+    };
+    followers: number | null;
+    /**
+     * One entry per UTC day with data. A metric TikTok did not report for a day is omitted, never 0.
+     */
+    daily: Array<{
+        date: string;
+        videoViews?: number;
+        profileViews?: number;
+        likes?: number;
+        comments?: number;
+        shares?: number;
+        uniqueVideoViews?: number;
+        newFollowers?: number;
+        lostFollowers?: number;
+        netFollowers?: number;
+        engagedAudience?: number;
+        bioLinkClicks?: number;
+        phoneNumberClicks?: number;
+        leadSubmissions?: number;
+        appDownloadClicks?: number;
+        emailClicks?: number;
+        addressClicks?: number;
+        /**
+         * 24 values, index = UTC hour.
+         */
+        activityByHour?: Array<number>;
+    }>;
+    /**
+     * Sum of each metric over the range; omitted when no day reported it.
+     */
+    totals: {
+        videoViews?: number;
+        profileViews?: number;
+        likes?: number;
+        comments?: number;
+        shares?: number;
+        uniqueVideoViews?: number;
+        newFollowers?: number;
+        lostFollowers?: number;
+        netFollowers?: number;
+        engagedAudience?: number;
+        bioLinkClicks?: number;
+        phoneNumberClicks?: number;
+        leadSubmissions?: number;
+        appDownloadClicks?: number;
+        emailClicks?: number;
+        addressClicks?: number;
+    };
+    /**
+     * Latest follower demographics. TikTok returns them from 100 followers.
+     */
+    audience: {
+        ages?: Array<{
+            age: string;
+            percent: number;
+        }>;
+        genders?: Array<{
+            gender: string;
+            percent: number;
+        }>;
+        countries?: Array<{
+            country: string;
+            percent: number;
+        }>;
+        cities?: Array<{
+            city: string;
+            percent: number;
+        }>;
+        observedAt?: string;
+    } | null;
+    availability: {
+        daily: 'available' | 'scope_missing';
+        audience: 'available' | 'insufficient_followers' | 'scope_missing';
+    };
+};
+
 export type ListProfilesData = {
     body?: never;
     path?: never;
@@ -5059,6 +5278,96 @@ export type ListPostReactionsResponses = {
 
 export type ListPostReactionsResponse = ListPostReactionsResponses[keyof ListPostReactionsResponses];
 
+export type ListInboxCommentsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Restrict the read to accounts on one profile.
+         */
+        profileId?: string;
+        /**
+         * Restrict the read to one platform.
+         */
+        platform?: 'instagram' | 'facebook' | 'threads' | 'tiktok';
+        /**
+         * Restrict the read to one connected account. An account on a platform the inbox does not cover returns `400 platformUnsupported`.
+         */
+        accountId?: string;
+        /**
+         * Only posts whose stored `commentCount` is at least this. Posts without a count never match.
+         */
+        minComments?: number;
+        /**
+         * Only posts created after this time. A bare date is midnight UTC.
+         */
+        since?: string;
+        /**
+         * Order by `createdTime` (`date`) or by stored `commentCount` (`comments`).
+         */
+        sortBy?: 'date' | 'comments';
+        /**
+         * Sort direction.
+         */
+        sortOrder?: 'desc' | 'asc';
+        /**
+         * Page size.
+         */
+        limit?: number;
+        /**
+         * Opaque pagination cursor. Pass `pagination.nextCursor` from the previous response with the same `sortBy` and `sortOrder`.
+         */
+        cursor?: string;
+        /**
+         * `summary` omits `picture` and cuts `content` to 280 characters, marking a cut caption with `contentTruncated: true`.
+         */
+        view?: 'full' | 'summary';
+    };
+    url: '/v1/inbox/comments';
+};
+
+export type ListInboxCommentsErrors = {
+    /**
+     * A parameter is malformed (bad enum, date, `limit`, or `minComments`) — a plain `{ error }` body — the cursor does not belong to this `sortBy`/`sortOrder` (`invalidCursor`), or `accountId` names an account on a platform the inbox does not cover (`platformUnsupported`).
+     */
+    400: InboxErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * `profileId` or `accountId` is outside the API key's profile access (`profile_forbidden` or `forbidden`).
+     */
+    403: InboxErrorResponse;
+    /**
+     * `accountId` names no account the key's owner has (`accountNotFound`).
+     */
+    404: InboxErrorResponse;
+    /**
+     * `accountId` names a disconnected or disabled account (`connectionDead`).
+     */
+    424: InboxErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type ListInboxCommentsError = ListInboxCommentsErrors[keyof ListInboxCommentsErrors];
+
+export type ListInboxCommentsResponses = {
+    /**
+     * Posts returned.
+     */
+    200: InboxCommentedPostsResponse;
+};
+
+export type ListInboxCommentsResponse = ListInboxCommentsResponses[keyof ListInboxCommentsResponses];
+
 export type DeleteInboxCommentData = {
     body?: never;
     path: {
@@ -5069,7 +5378,7 @@ export type DeleteInboxCommentData = {
     };
     query: {
         /**
-         * PostZen account id of the connected Instagram, Facebook, or Threads account that owns the post.
+         * PostZen account id of the connected Instagram, Facebook, Threads, or TikTok account that owns the post.
          */
         accountId: string;
         /**
@@ -5082,7 +5391,7 @@ export type DeleteInboxCommentData = {
 
 export type DeleteInboxCommentErrors = {
     /**
-     * A parameter is missing or malformed — a plain `{ error }` body — or the account is not on a platform the inbox supports (`platformUnsupported`). A platform-rejected identifier or parameter also lands here, with `platformError` carrying the platform's wording.
+     * A parameter is missing or malformed — a plain `{ error }` body — the account is not on a platform the inbox supports (`platformUnsupported`), or the comment is someone else's TikTok comment (`unsupported`). A platform-rejected identifier or parameter also lands here, with `platformError` carrying the platform's wording.
      */
     400: InboxErrorResponse;
     /**
@@ -5102,7 +5411,7 @@ export type DeleteInboxCommentErrors = {
      */
     424: InboxErrorResponse;
     /**
-     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
+     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. TikTok throttling, including PostZen's per-account TikTok request budget, answers with the plain rate-limit body instead. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
      */
     429: InboxErrorResponse;
     /**
@@ -5136,7 +5445,7 @@ export type ListInboxPostCommentsData = {
     };
     query: {
         /**
-         * PostZen account id of the connected Instagram, Facebook, or Threads account that owns the post.
+         * PostZen account id of the connected Instagram, Facebook, Threads, or TikTok account that owns the post.
          */
         accountId: string;
         /**
@@ -5177,7 +5486,7 @@ export type ListInboxPostCommentsErrors = {
      */
     424: InboxErrorResponse;
     /**
-     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
+     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. TikTok throttling, including PostZen's per-account TikTok request budget, answers with the plain rate-limit body instead. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
      */
     429: InboxErrorResponse;
     /**
@@ -5239,7 +5548,7 @@ export type ReplyToInboxPostErrors = {
      */
     424: InboxErrorResponse;
     /**
-     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
+     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. TikTok throttling, including PostZen's per-account TikTok request budget, answers with the plain rate-limit body instead. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
      */
     429: InboxErrorResponse;
     /**
@@ -5277,7 +5586,7 @@ export type UnhideInboxCommentData = {
     };
     query: {
         /**
-         * PostZen account id of the connected Instagram, Facebook, or Threads account that owns the post.
+         * PostZen account id of the connected Instagram, Facebook, Threads, or TikTok account that owns the post.
          */
         accountId: string;
     };
@@ -5306,7 +5615,7 @@ export type UnhideInboxCommentErrors = {
      */
     424: InboxErrorResponse;
     /**
-     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
+     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. TikTok throttling, including PostZen's per-account TikTok request budget, answers with the plain rate-limit body instead. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
      */
     429: InboxErrorResponse;
     /**
@@ -5348,7 +5657,7 @@ export type HideInboxCommentData = {
 
 export type HideInboxCommentErrors = {
     /**
-     * A parameter is missing or malformed — a plain `{ error }` body — or the account is not on a platform the inbox supports (`platformUnsupported`). A platform-rejected identifier or parameter also lands here, with `platformError` carrying the platform's wording.
+     * A parameter is missing or malformed — a plain `{ error }` body — the account is not on a platform the inbox supports (`platformUnsupported`), or the comment is the connected account's own TikTok comment (`unsupported`). A platform-rejected identifier or parameter also lands here, with `platformError` carrying the platform's wording.
      */
     400: InboxErrorResponse;
     /**
@@ -5368,7 +5677,7 @@ export type HideInboxCommentErrors = {
      */
     424: InboxErrorResponse;
     /**
-     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
+     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. TikTok throttling, including PostZen's per-account TikTok request budget, answers with the plain rate-limit body instead. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
      */
     429: InboxErrorResponse;
     /**
@@ -5406,7 +5715,7 @@ export type UnlikeInboxCommentData = {
     };
     query: {
         /**
-         * PostZen account id of the connected Facebook Page that owns the post.
+         * PostZen account id of the connected Facebook Page or TikTok account that owns the post.
          */
         accountId: string;
     };
@@ -5435,7 +5744,7 @@ export type UnlikeInboxCommentErrors = {
      */
     424: InboxErrorResponse;
     /**
-     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
+     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. TikTok throttling, including PostZen's per-account TikTok request budget, answers with the plain rate-limit body instead. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
      */
     429: InboxErrorResponse;
     /**
@@ -5497,7 +5806,7 @@ export type LikeInboxCommentErrors = {
      */
     424: InboxErrorResponse;
     /**
-     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
+     * The platform rate limited the upstream request; `platformError` carries its wording and `Retry-After` gives the wait in seconds. TikTok throttling, including PostZen's per-account TikTok request budget, answers with the plain rate-limit body instead. PostZen's own per-key and per-operation limiters also return `429`, with the plain body `{"error":"rate_limited","retryAfter":<seconds>}`.
      */
     429: InboxErrorResponse;
     /**
@@ -6895,6 +7204,68 @@ export type GetBestTimeToPostResponses = {
 };
 
 export type GetBestTimeToPostResponse = GetBestTimeToPostResponses[keyof GetBestTimeToPostResponses];
+
+export type GetAccountInsightsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Connected account id.
+         */
+        accountId: string;
+        /**
+         * Inclusive range start. Defaults to 30 days before `toDate`. The range may span at most 366 days, and `toDate` defaults to now, so an older `fromDate` needs a `toDate` within 366 days of it.
+         */
+        fromDate?: AnalyticsDate;
+        /**
+         * Inclusive range end. Defaults to the current time. Must be no more than 366 days after `fromDate`.
+         */
+        toDate?: AnalyticsDate;
+    };
+    url: '/v1/analytics/account-insights';
+};
+
+export type GetAccountInsightsErrors = {
+    /**
+     * Invalid request.
+     */
+    400: ErrorResponse;
+    /**
+     * Missing or invalid API key.
+     */
+    401: ErrorResponse;
+    /**
+     * Analytics entitlement required.
+     */
+    402: ErrorResponse;
+    /**
+     * The API key does not have sufficient permission or profile access.
+     */
+    403: ErrorResponse;
+    /**
+     * Resource not found.
+     */
+    404: ErrorResponse;
+    /**
+     * Rate limit exceeded. Retry after the interval indicated by the `Retry-After` header.
+     */
+    429: RateLimitError;
+    /**
+     * Unexpected server error.
+     */
+    500: ErrorResponse;
+};
+
+export type GetAccountInsightsError = GetAccountInsightsErrors[keyof GetAccountInsightsErrors];
+
+export type GetAccountInsightsResponses = {
+    /**
+     * Account insights returned.
+     */
+    200: AccountInsightsResponse;
+};
+
+export type GetAccountInsightsResponse = GetAccountInsightsResponses[keyof GetAccountInsightsResponses];
 
 export type GetFollowerStatsData = {
     body?: never;

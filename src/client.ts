@@ -29,6 +29,7 @@ import {
   deleteQueueSlot,
   deleteWebhook,
   disconnectAccount,
+  getAccountInsights,
   getAnalytics,
   getBestTimeToPost,
   getCommentAutomation,
@@ -50,6 +51,7 @@ import {
   listCommentAutomationLogs,
   listCommentAutomations,
   listContacts,
+  listInboxComments,
   listInboxConversationMessages,
   listInboxConversations,
   listInboxPostComments,
@@ -316,6 +318,7 @@ export class PostZen {
     getInboxConversation: ((options?: Parameters<typeof getInboxConversation>[0]) => getInboxConversation(this._withRequestOptions(options) as Parameters<typeof getInboxConversation>[0])) as typeof getInboxConversation,
     hideInboxComment: ((options?: Parameters<typeof hideInboxComment>[0]) => hideInboxComment(this._withRequestOptions(options) as Parameters<typeof hideInboxComment>[0])) as typeof hideInboxComment,
     likeInboxComment: ((options?: Parameters<typeof likeInboxComment>[0]) => likeInboxComment(this._withRequestOptions(options) as Parameters<typeof likeInboxComment>[0])) as typeof likeInboxComment,
+    listInboxComments: ((options?: Parameters<typeof listInboxComments>[0]) => listInboxComments(this._withRequestOptions(options) as Parameters<typeof listInboxComments>[0])) as typeof listInboxComments,
     listInboxConversationMessages: ((options?: Parameters<typeof listInboxConversationMessages>[0]) => listInboxConversationMessages(this._withRequestOptions(options) as Parameters<typeof listInboxConversationMessages>[0])) as typeof listInboxConversationMessages,
     listInboxConversations: ((options?: Parameters<typeof listInboxConversations>[0]) => listInboxConversations(this._withRequestOptions(options) as Parameters<typeof listInboxConversations>[0])) as typeof listInboxConversations,
     listInboxPostComments: ((options?: Parameters<typeof listInboxPostComments>[0]) => listInboxPostComments(this._withRequestOptions(options) as Parameters<typeof listInboxPostComments>[0])) as typeof listInboxPostComments,
@@ -395,6 +398,7 @@ export class PostZen {
    * analytics API
    */
   analytics = {
+    getAccountInsights: ((options?: Parameters<typeof getAccountInsights>[0]) => getAccountInsights(this._withRequestOptions(options) as Parameters<typeof getAccountInsights>[0])) as typeof getAccountInsights,
     getAnalytics: ((options?: Parameters<typeof getAnalytics>[0]) => getAnalytics(this._withRequestOptions(options) as Parameters<typeof getAnalytics>[0])) as typeof getAnalytics,
     getBestTimeToPost: ((options?: Parameters<typeof getBestTimeToPost>[0]) => getBestTimeToPost(this._withRequestOptions(options) as Parameters<typeof getBestTimeToPost>[0])) as typeof getBestTimeToPost,
     getDailyMetrics: ((options?: Parameters<typeof getDailyMetrics>[0]) => getDailyMetrics(this._withRequestOptions(options) as Parameters<typeof getDailyMetrics>[0])) as typeof getDailyMetrics,
