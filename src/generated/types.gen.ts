@@ -2,7 +2,7 @@
 
 export type CommentAutomation = {
     /**
-     * Connected Instagram account or Facebook Page id. Immutable after creation.
+     * Connected Instagram account, Facebook Page or TikTok business account id. Immutable after creation.
      */
     accountId: string;
     /**
@@ -14,7 +14,7 @@ export type CommentAutomation = {
      */
     name: string;
     /**
-     * story_reply is Instagram only; a Facebook automation returns 400 unsupported.
+     * story_reply is Instagram only; on a Facebook Page or TikTok it returns 400 unsupported.
      */
     trigger: 'comment' | 'story_reply';
     /**
@@ -40,32 +40,44 @@ export type CommentAutomation = {
      */
     typoTolerance: boolean;
     /**
-     * Plain text: at most 1000 UTF-8 bytes. With buttons: at most 640 characters.
+     * Plain text: at most 1000 UTF-8 bytes. With buttons: at most 640 characters. Empty string on TikTok.
      */
     dmMessage: string;
     /**
-     * Same limits as dmMessage. Uniform random choice from the base message and variations.
+     * Same limits as dmMessage. Uniform random choice from the base message and variations. Not supported on TikTok (400 unsupported).
      */
     dmMessageVariations: Array<string>;
+    /**
+     * Not supported on TikTok (400 unsupported).
+     */
     buttons: Array<CommentAutomationButton>;
+    /**
+     * Not supported on TikTok (400 unsupported).
+     */
     template?: CommentAutomationTemplate;
     /**
-     * Optional public reply, sent only after successful comment DM. Ignored for story_reply.
+     * Public reply under the comment. Supports {{first_name}}, {{name}} and {{username}}; an unknown value is left out. Instagram and Facebook: optional, sent only after a successful comment DM, ignored for story_reply. TikTok: required (cannot be cleared), and it is the only thing the automation sends.
      */
     commentReply?: string;
     /**
-     * Uniform random choice independent of the DM.
+     * Uniform random choice independent of the DM. Placeholders work as in commentReply.
      */
     commentReplyVariations: Array<string>;
+    /**
+     * Not supported on TikTok (400 unsupported).
+     */
     dmDelaySeconds: number;
     /**
-     * Effective delay is max(dmDelaySeconds, commentReplyDelaySeconds).
+     * Effective delay is max(dmDelaySeconds, commentReplyDelaySeconds). On TikTok the reply waits this long plus a few seconds of jitter.
      */
     commentReplyDelaySeconds: number;
     isActive: boolean;
     linkTracking: false;
     id: string;
-    platform: 'instagram' | 'facebook';
+    /**
+     * tiktok automations only post a public reply.
+     */
+    platform: 'instagram' | 'facebook' | 'tiktok';
     alsoMatchInDms: false;
     stats: {
         totalTriggered: number;
@@ -74,16 +86,30 @@ export type CommentAutomation = {
     };
     createdAt: string;
     updatedAt: string;
+    /**
+     * Not supported on TikTok (400 unsupported).
+     */
     audience: CommentAutomationAudience;
     /**
-     * The Opening DM that actually goes out: the stored one, the defaults when `audience` filters by followers, or null when off.
+     * The Opening DM that actually goes out: the stored one, the defaults when `audience` filters by followers, or null when off. Not supported on TikTok (400 unsupported).
      */
     openingDm: CommentAutomationOpeningDm;
+    /**
+     * Not supported on TikTok (400 unsupported).
+     */
     followGate?: CommentAutomationFollowGate;
     /**
      * Both flags are always present; false when off.
      */
     actions: CommentAutomationActions;
+    /**
+     * Always present; {mode: once} when not set.
+     */
+    repeatPolicy: CommentAutomationRepeatPolicy;
+    /**
+     * When the automation was last switched on. Comments posted before it are never answered.
+     */
+    activatedAt: string;
 };
 
 export type CommentAutomationButton = {
@@ -110,11 +136,11 @@ export type CommentAutomationActions = {
 };
 
 /**
- * Maximum 100 automations per user; at most one active per-post automation for each account and post reference. alsoMatchInDms, clickTag and linkTracking:true return 400 unsupported. On a Facebook Page, trigger story_reply, audience and followGate also return 400 unsupported; actions.likeComment is Facebook only. Instagram accounts and Facebook Pages. A comment permits one private reply ever, within 7 days. Story replies (Instagram only) use normal DMs inside the 24-hour messaging window. Buttons and image cards (template) fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages on Instagram, or pages_messaging and pages_manage_metadata on a Facebook Page (plus pages_manage_engagement when commentReply is set).
+ * Maximum 100 automations per user; at most one active per-post automation for each account and post reference. alsoMatchInDms, clickTag and linkTracking:true return 400 unsupported. On a Facebook Page, trigger story_reply, audience and followGate also return 400 unsupported; actions.likeComment is Facebook only. Instagram accounts and Facebook Pages. A comment permits one private reply ever, within 7 days. Story replies (Instagram only) use normal DMs inside the 24-hour messaging window. Buttons and image cards (template) fall back to text with title and URL lines if Meta rejects the template. Reconnect the account on 403 platformCapabilityMissing to grant instagram_business_manage_comments and instagram_business_manage_messages on Instagram, or pages_messaging and pages_manage_metadata on a Facebook Page (plus pages_manage_engagement when commentReply is set). TikTok business accounts (connected through the TikTok Business app with comment access): the automation only posts a PUBLIC reply under the matching comment, because TikTok has no private reply to a comment. On TikTok, commentReply is required; trigger must be comment; dmMessage, dmMessageVariations, buttons, template, audience, followGate, openingDm and dmDelaySeconds return 400 unsupported (on PATCH, null or an empty array is accepted as a no-op). Replies are capped at 100 per account per hour; over the cap a reply waits and is skipped as reply_rate_limited after 6 hours. A TikTok account connected without comment access returns 400 validation: reconnect it to enable comments.
  */
 export type CommentAutomationCreateRequest = {
     /**
-     * Connected Instagram account or Facebook Page id. Immutable after creation.
+     * Connected Instagram account, Facebook Page or TikTok business account id. Immutable after creation.
      */
     accountId: string;
     /**
@@ -126,7 +152,7 @@ export type CommentAutomationCreateRequest = {
      */
     name: string;
     /**
-     * story_reply is Instagram only; a Facebook automation returns 400 unsupported.
+     * story_reply is Instagram only; on a Facebook Page or TikTok it returns 400 unsupported.
      */
     trigger?: 'comment' | 'story_reply';
     /**
@@ -152,50 +178,57 @@ export type CommentAutomationCreateRequest = {
      */
     typoTolerance?: boolean;
     /**
-     * Required unless template is set. Plain text: at most 1000 UTF-8 bytes. With buttons: at most 640 characters. Ignored when a template is sent.
+     * Instagram and Facebook: required unless template is set. Plain text: at most 1000 UTF-8 bytes. With buttons: at most 640 characters. Ignored when a template is sent. Not supported on TikTok (400 unsupported).
      */
     dmMessage?: string;
     /**
-     * Same limits as dmMessage. Uniform random choice from the base message and variations.
+     * Same limits as dmMessage. Uniform random choice from the base message and variations. Not supported on TikTok (400 unsupported).
      */
     dmMessageVariations?: Array<string>;
     /**
-     * Mutually exclusive with template.
+     * Mutually exclusive with template. Not supported on TikTok (400 unsupported).
      */
     buttons?: Array<CommentAutomationButton>;
+    /**
+     * Not supported on TikTok (400 unsupported).
+     */
     template?: CommentAutomationTemplate;
     /**
-     * Optional public reply, sent only after successful comment DM. Ignored for story_reply.
+     * Public reply under the comment. Supports {{first_name}}, {{name}} and {{username}}; an unknown value is left out. Instagram and Facebook: optional, sent only after a successful comment DM, ignored for story_reply. TikTok: required (cannot be cleared), and it is the only thing the automation sends.
      */
     commentReply?: string;
     /**
-     * Uniform random choice independent of the DM.
+     * Uniform random choice independent of the DM. Placeholders work as in commentReply.
      */
     commentReplyVariations?: Array<string>;
+    /**
+     * Not supported on TikTok (400 unsupported).
+     */
     dmDelaySeconds?: number;
     /**
-     * Effective delay is max(dmDelaySeconds, commentReplyDelaySeconds).
+     * Effective delay is max(dmDelaySeconds, commentReplyDelaySeconds). On TikTok the reply waits this long plus a few seconds of jitter.
      */
     commentReplyDelaySeconds?: number;
     isActive?: boolean;
     linkTracking?: false;
     /**
-     * Instagram only: a Facebook automation returns 400 unsupported.
+     * Instagram only: a Facebook automation returns 400 unsupported. Not supported on TikTok (400 unsupported).
      */
     audience?: CommentAutomationAudience;
     /**
-     * Send an object (even `{}` for the defaults) to turn the Opening DM on. Omit to leave it off, unless `audience` filters by followers.
+     * Send an object (even `{}` for the defaults) to turn the Opening DM on. Omit to leave it off, unless `audience` filters by followers. Not supported on TikTok (400 unsupported).
      */
     openingDm?: CommentAutomationOpeningDm;
     /**
-     * Instagram only: a Facebook automation returns 400 unsupported.
+     * Instagram only: a Facebook automation returns 400 unsupported. Not supported on TikTok (400 unsupported).
      */
     followGate?: CommentAutomationFollowGate;
     actions?: CommentAutomationActions;
+    repeatPolicy?: CommentAutomationRepeatPolicy;
 };
 
 /**
- * Partial update. accountId is immutable. Enabling checks capabilities and duplicate per-post limits. Unsupported fields are rejected as on create.
+ * Partial update. accountId is immutable. Enabling checks capabilities and duplicate per-post limits. Unsupported fields are rejected as on create. TikTok business accounts (connected through the TikTok Business app with comment access): the automation only posts a PUBLIC reply under the matching comment, because TikTok has no private reply to a comment. On TikTok, commentReply is required; trigger must be comment; dmMessage, dmMessageVariations, buttons, template, audience, followGate, openingDm and dmDelaySeconds return 400 unsupported (on PATCH, null or an empty array is accepted as a no-op). Replies are capped at 100 per account per hour; over the cap a reply waits and is skipped as reply_rate_limited after 6 hours. A TikTok account connected without comment access returns 400 validation: reconnect it to enable comments.
  */
 export type CommentAutomationUpdateRequest = {
     /**
@@ -207,7 +240,7 @@ export type CommentAutomationUpdateRequest = {
      */
     name?: string;
     /**
-     * story_reply is Instagram only; a Facebook automation returns 400 unsupported.
+     * story_reply is Instagram only; on a Facebook Page or TikTok it returns 400 unsupported.
      */
     trigger?: 'comment' | 'story_reply';
     /**
@@ -233,52 +266,59 @@ export type CommentAutomationUpdateRequest = {
      */
     typoTolerance?: boolean;
     /**
-     * Plain text: at most 1000 UTF-8 bytes. With buttons: at most 640 characters.
+     * Plain text: at most 1000 UTF-8 bytes. With buttons: at most 640 characters. Not supported on TikTok (400 unsupported).
      */
     dmMessage?: string;
     /**
-     * Same limits as dmMessage. Uniform random choice from the base message and variations.
+     * Same limits as dmMessage. Uniform random choice from the base message and variations. Not supported on TikTok (400 unsupported).
      */
     dmMessageVariations?: Array<string>;
     /**
-     * Mutually exclusive with template. Pass [] to clear.
+     * Mutually exclusive with template. Pass [] to clear. Not supported on TikTok (400 unsupported).
      */
     buttons?: Array<CommentAutomationButton>;
     /**
-     * Send null to remove the card and go back to dmMessage.
+     * Send null to remove the card and go back to dmMessage. Not supported on TikTok (400 unsupported).
      */
     template?: CommentAutomationTemplate | null;
     /**
-     * Optional public reply, sent only after successful comment DM. Ignored for story_reply.
+     * Public reply under the comment. Supports {{first_name}}, {{name}} and {{username}}; an unknown value is left out. Instagram and Facebook: optional, sent only after a successful comment DM, ignored for story_reply. TikTok: required (cannot be cleared), and it is the only thing the automation sends.
      */
     commentReply?: string;
     /**
-     * Uniform random choice independent of the DM.
+     * Uniform random choice independent of the DM. Placeholders work as in commentReply.
      */
     commentReplyVariations?: Array<string>;
+    /**
+     * Not supported on TikTok (400 unsupported).
+     */
     dmDelaySeconds?: number;
     /**
-     * Effective delay is max(dmDelaySeconds, commentReplyDelaySeconds).
+     * Effective delay is max(dmDelaySeconds, commentReplyDelaySeconds). On TikTok the reply waits this long plus a few seconds of jitter.
      */
     commentReplyDelaySeconds?: number;
     isActive?: boolean;
     linkTracking?: false;
     /**
-     * Instagram only: a Facebook automation returns 400 unsupported. On PATCH, null clears it.
+     * Instagram only: a Facebook automation returns 400 unsupported. On PATCH, null clears it. Not supported on TikTok (400 unsupported).
      */
     audience?: CommentAutomationAudience;
     /**
-     * Send null to turn the Opening DM off. A follower-based `audience` still sends the defaults.
+     * Send null to turn the Opening DM off. A follower-based `audience` still sends the defaults. Not supported on TikTok (400 unsupported).
      */
     openingDm?: CommentAutomationOpeningDm;
     /**
-     * Instagram only: a Facebook automation returns 400 unsupported. On PATCH, null clears it.
+     * Instagram only: a Facebook automation returns 400 unsupported. On PATCH, null clears it. Not supported on TikTok (400 unsupported).
      */
     followGate?: CommentAutomationFollowGate;
     /**
      * Replaces the stored actions. Send null to turn both off.
      */
     actions?: CommentAutomationActions;
+    /**
+     * On PATCH, null resets it to once.
+     */
+    repeatPolicy?: CommentAutomationRepeatPolicy;
 };
 
 export type CommentAutomationLog = {
@@ -291,7 +331,10 @@ export type CommentAutomationLog = {
     commenterId: string;
     commenterName?: string;
     commentText?: string;
-    skipReason?: 'already_sent_to_contact' | 'automation_inactive' | 'not_follower' | 'is_follower' | 'below_min_followers' | 'follow_status_unknown' | 'contact_blocked' | 'contact_unsubscribed' | 'plan_limit';
+    /**
+     * repeat_cooldown: the person triggered this automation inside repeatPolicy.cooldownHours. reply_rate_limited (TikTok): the account stayed over 100 replies per hour for 6 hours. account_unavailable (TikTok): the account was disconnected or needs reconnecting when the reply was due.
+     */
+    skipReason?: 'already_sent_to_contact' | 'automation_inactive' | 'not_follower' | 'is_follower' | 'below_min_followers' | 'follow_status_unknown' | 'contact_blocked' | 'contact_unsubscribed' | 'plan_limit' | 'repeat_cooldown' | 'reply_rate_limited' | 'account_unavailable';
     error?: string;
     sentMessageId?: string;
     commentReplyError?: string;
@@ -348,6 +391,15 @@ export type CommentAutomationLog = {
      * Why hiding the comment failed.
      */
     hideError?: string;
+    commenterUsername?: string;
+    /**
+     * The public reply as posted, after variations and placeholders.
+     */
+    commentReplyText?: string;
+    /**
+     * The id of the posted public reply.
+     */
+    commentReplyCommentId?: string;
 };
 
 export type CommentAutomationListResponse = {
@@ -3981,6 +4033,17 @@ export type AccountInsightsResponse = {
         daily: 'available' | 'scope_missing';
         audience: 'available' | 'insufficient_followers' | 'scope_missing';
     };
+};
+
+/**
+ * How often one person can trigger this automation. once (default): each contact is answered at most once per automation and source; later comments are skipped as already_sent_to_contact. every_comment: every new matching comment is answered; with cooldownHours, a repeat from the same person inside that window is skipped as repeat_cooldown. On PATCH, null resets it to once.
+ */
+export type CommentAutomationRepeatPolicy = {
+    mode: 'once' | 'every_comment';
+    /**
+     * Only valid with mode every_comment. On PATCH, omit it from the object to clear it.
+     */
+    cooldownHours?: number;
 };
 
 export type ListProfilesData = {
